@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rate Calculator — HR Homestyle Projects</title>
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+  .result-box { background: var(--navy); border-radius: var(--radius); padding: 20px 24px; color: white; margin-bottom: 16px; }
+  .result-box .r-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .result-box .r-value { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--gold); }
+  .result-box .r-sub { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+  .calc-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f3f8; font-size:0.85rem; }
+  .calc-row:last-child { border-bottom:none; }
+  .calc-row .label { color:var(--text-mid); }
+  .calc-row .value { font-weight:600; font-variant-numeric:tabular-nums; }
+  .calc-row.total { color:var(--navy); font-weight:700; font-size:0.95rem; border-top:2px solid var(--navy); padding-top:10px; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-topbar">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logo.png" alt="HR Homestyle Projects">
+      <div class="brand-text"><span class="brand-name">HR HOMESTYLE</span><span class="brand-sub">P R O J E C T S</span></div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <div id="topbar-date"></div>
+      <div id="topbar-abn"></div>
+    </div>
+  </header>
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a href="quotes.html" class="nav-item"><span class="nav-icon">📋</span> Quotes</a>
+    <a href="invoices.html" class="nav-item"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="clients.html" class="nav-icon nav-item"><span class="nav-icon">👤</span> Clients</a>
+    <a href="jobs.html" class="nav-item"><span class="nav-icon">🔨</span> Jobs</a>
+    <a href="financials.html" class="nav-item"><span class="nav-icon">📊</span> Financials</a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="quote-builder.html" class="nav-item"><span class="nav-icon">✏️</span> Quote Builder</a>
+    <a href="rate-calculator.html" class="nav-item active"><span class="nav-icon">💰</span> Rate Calculator</a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Charge-Out Rate Calculator</div>
+        <div class="page-subtitle">Calculate your true cost of labour and set profitable rates for Melbourne market</div>
+      </div>
+    </div>
+
+    <div class="alert alert-info" style="margin-bottom:20px">
+      <strong>How this works:</strong> Enter your actual wage costs and business overheads below. The calculator works out your true hourly cost and recommends a profitable Melbourne market charge-out rate.
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+
+      <!-- INPUTS -->
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>💼 Labour Costs</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>Base Hourly Wage ($/hr)</label><input id="wage" type="number" value="35" min="0" step="0.5" oninput="calculate()"></div>
+            <div class="form-group"><label>Superannuation Rate (%)</label><input id="super" type="number" value="11.5" min="0" max="20" step="0.1" oninput="calculate()"></div>
+            <div class="form-group"><label>Annual Leave Loading (%)</label><input id="leave" type="number" value="17.5" min="0" step="0.1" oninput="calculate()"></div>
+            <div class="form-group"><label>Workers Comp Insurance ($/yr)</label><input id="wcomp" type="number" value="2400" min="0" oninput="calculate()"></div>
+            <div class="form-group"><label>Billable Hours Per Year</label><input id="billable" type="number" value="1600" min="100" max="2500" oninput="calculate()">
+              <small style="color:var(--text-light);font-size:0.75rem">Standard = 1,600 hrs (200 days × 8 hrs). Adjust for your reality.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🏢 Business Overheads (Annual)</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>Vehicle / Fuel ($)</label><input id="vehicle" type="number" value="8000" min="0" oninput="calculate()"></div>
+            <div class="form-group"><label>Tools & Equipment ($)</label><input id="tools" type="number" value="3000" min="0" oninput="calculate()"></div>
+            <div class="form-group"><label>Public Liability Insurance ($)</label><input id="pli" type="number" value="2200" min="0" oninput="calculate()"></div>
+            <div class="form-group"><label>Phone / Internet ($)</label><input id="phone" type="number" value="1200" min="0" oninput="calculate()"></div>
+            <div class="form-group"><label>Accounting / Admin ($)</label><input id="admin" type="number" value="2000" min="0" oninput="calculate()"></div>
+            <div class="form-group"><label>Other Overheads ($)</label><input id="other" type="number" value="1000" min="0" oninput="calculate()"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📈 Margin</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Target Profit Margin (%)</label>
+              <input id="margin" type="number" value="20" min="0" max="100" oninput="calculate()">
+              <small style="color:var(--text-light);font-size:0.75rem">Recommended: 20–30% for Melbourne residential trades.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div>
+        <div class="result-box">
+          <div class="r-label">Recommended Charge-Out Rate</div>
+          <div class="r-value" id="res_chargeout">$0.00 / hr</div>
+          <div class="r-sub" id="res_daily">Daily rate: $0.00 (8 hrs)</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📊 Cost Breakdown</h3></div>
+          <div class="card-body">
+            <div class="calc-row"><span class="label">Base wage cost</span><span class="value" id="br_wage">$0.00/hr</span></div>
+            <div class="calc-row"><span class="label">Superannuation</span><span class="value" id="br_super">$0.00/hr</span></div>
+            <div class="calc-row"><span class="label">Leave loading</span><span class="value" id="br_leave">$0.00/hr</span></div>
+            <div class="calc-row"><span class="label">Workers comp</span><span class="value" id="br_wcomp">$0.00/hr</span></div>
+            <div class="calc-row"><span class="label">Business overheads</span><span class="value" id="br_overhead">$0.00/hr</span></div>
+            <div class="calc-row total"><span class="label">True cost of labour</span><span class="value" id="br_truecost">$0.00/hr</span></div>
+            <div class="calc-row" style="margin-top:8px"><span class="label">Profit margin added</span><span class="value" id="br_profit">$0.00/hr</span></div>
+            <div class="calc-row total"><span class="label">Charge-out rate</span><span class="value" id="br_rate">$0.00/hr</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🏗 Melbourne Market Benchmarks</h3></div>
+          <div class="card-body">
+            <div class="calc-row"><span class="label">Labourer (unskilled)</span><span class="value">$55 – $75/hr</span></div>
+            <div class="calc-row"><span class="label">Carpenter / Joiner</span><span class="value">$75 – $110/hr</span></div>
+            <div class="calc-row"><span class="label">Tiler</span><span class="value">$70 – $100/hr</span></div>
+            <div class="calc-row"><span class="label">Painter</span><span class="value">$65 – $95/hr</span></div>
+            <div class="calc-row"><span class="label">Builder / Renovator</span><span class="value">$85 – $130/hr</span></div>
+            <div class="calc-row"><span class="label">Fencing Installer</span><span class="value">$70 – $95/hr</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📅 Annual Summary</h3></div>
+          <div class="card-body">
+            <div class="calc-row"><span class="label">Total labour cost p.a.</span><span class="value" id="ann_labour">$0</span></div>
+            <div class="calc-row"><span class="label">Total overheads p.a.</span><span class="value" id="ann_overhead">$0</span></div>
+            <div class="calc-row total"><span class="label">Total cost base p.a.</span><span class="value" id="ann_cost">$0</span></div>
+            <div class="calc-row"><span class="label">Revenue at charge-out rate p.a.</span><span class="value" id="ann_revenue">$0</span></div>
+            <div class="calc-row total"><span class="label">Gross profit p.a.</span><span class="value" id="ann_profit" style="color:var(--success)">$0</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+function v(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function s(id, val) { document.getElementById(id).textContent = val; }
+
+function calculate() {
+  const wage     = v('wage');
+  const superPct = v('super') / 100;
+  const leavePct = v('leave') / 100;
+  const wcomp    = v('wcomp');
+  const billable = v('billable') || 1600;
+  const marginPct= v('margin') / 100;
+
+  const overheads = v('vehicle') + v('tools') + v('pli') + v('phone') + v('admin') + v('other');
+
+  // Per-hour costs
+  const wageHr    = wage;
+  const superHr   = wage * superPct;
+  const leaveHr   = wage * leavePct * (4 / 52); // ~4 weeks annual leave prorated
+  const wcompHr   = wcomp / billable;
+  const overheadHr= overheads / billable;
+  const trueCost  = wageHr + superHr + leaveHr + wcompHr + overheadHr;
+  const profitHr  = trueCost * marginPct;
+  const chargeOut = trueCost + profitHr;
+
+  // Display
+  s('res_chargeout', `$${chargeOut.toFixed(2)} / hr`);
+  s('res_daily', `Daily rate: ${Utils.fmtCurrency(chargeOut * 8)} (8 hrs)`);
+  s('br_wage',     `$${wageHr.toFixed(2)}/hr`);
+  s('br_super',    `$${superHr.toFixed(2)}/hr`);
+  s('br_leave',    `$${leaveHr.toFixed(2)}/hr`);
+  s('br_wcomp',    `$${wcompHr.toFixed(2)}/hr`);
+  s('br_overhead', `$${overheadHr.toFixed(2)}/hr`);
+  s('br_truecost', `$${trueCost.toFixed(2)}/hr`);
+  s('br_profit',   `$${profitHr.toFixed(2)}/hr`);
+  s('br_rate',     `$${chargeOut.toFixed(2)}/hr`);
+
+  // Annual
+  const annLabour  = (wageHr + superHr + leaveHr + wcompHr) * billable;
+  const annRevenue = chargeOut * billable;
+  const annCost    = annLabour + overheads;
+  const annProfit  = annRevenue - annCost;
+  s('ann_labour',  Utils.fmtCurrency(annLabour));
+  s('ann_overhead', Utils.fmtCurrency(overheads));
+  s('ann_cost',    Utils.fmtCurrency(annCost));
+  s('ann_revenue', Utils.fmtCurrency(annRevenue));
+  s('ann_profit',  Utils.fmtCurrency(annProfit));
+  document.getElementById('ann_profit').style.color = annProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+}
+
+calculate();
+</script>
+</body>
+</html>

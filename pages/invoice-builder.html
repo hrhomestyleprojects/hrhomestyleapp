@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Builder — HR Homestyle Projects</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1f3c;
+    --navy-mid: #152845;
+    --navy-light: #1e3a5f;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-pale: #f5e9c8;
+    --cream: #faf7f0;
+    --white: #ffffff;
+    --text-dark: #1a1a2e;
+    --text-mid: #4a5568;
+    --text-light: #8a9bb0;
+    --border: #dde3ec;
+    --danger: #c0392b;
+    --success: #27ae60;
+    --shadow: 0 4px 24px rgba(13,31,60,0.10);
+    --shadow-lg: 0 12px 48px rgba(13,31,60,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0f3f8;
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: var(--navy);
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .toolbar-title { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.04em; }
+  .toolbar-actions { display: flex; gap: 10px; }
+
+  .btn { padding: 8px 18px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.18s; letter-spacing: 0.03em; }
+  .btn-outline { background: transparent; border: 1.5px solid rgba(201,168,76,0.5); color: var(--gold-light); }
+  .btn-outline:hover { background: rgba(201,168,76,0.12); border-color: var(--gold); }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), #b8933e); color: var(--navy); font-weight: 600; }
+  .btn-gold:hover { background: linear-gradient(135deg, var(--gold-light), var(--gold)); box-shadow: 0 2px 12px rgba(201,168,76,0.4); }
+  .btn-navy { background: var(--navy-light); color: var(--cream); border: 1px solid rgba(255,255,255,0.1); }
+  .btn-navy:hover { background: #24527a; }
+  .btn-danger { background: var(--danger); color: white; font-size: 0.75rem; padding: 5px 10px; }
+  .btn-danger:hover { background: #a93226; }
+  .btn-small { padding: 5px 12px; font-size: 0.78rem; }
+  .btn-add { background: rgba(201,168,76,0.12); border: 1.5px dashed var(--gold); color: var(--gold); width: 100%; padding: 10px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.18s; font-family: 'DM Sans', sans-serif; }
+  .btn-add:hover { background: rgba(201,168,76,0.22); }
+
+  /* APP SHELL / NAV */
+  .app-shell { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: auto 1fr; min-height: calc(100vh - 56px); }
+  .app-topbar { display: none; }
+  .app-sidebar {
+    background: var(--navy-mid);
+    padding: 20px 0;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    grid-row: 1 / 3;
+  }
+  .sidebar-section-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.35); padding: 0 20px 8px; margin-top: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 0.88rem; font-weight: 400; transition: all 0.16s; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+  .nav-item.active { background: rgba(201,168,76,0.15); color: var(--gold); font-weight: 500; }
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+  .nav-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 20px; }
+
+  /* MAIN */
+  .app-main { padding: 28px 32px; background: #f0f3f8; }
+
+  /* FORM ELEMENTS */
+  .card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+  .card-header { background: var(--navy); padding: 13px 20px; display: flex; align-items: center; gap: 10px; }
+  .card-header h3 { color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 600; }
+  .card-body { padding: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--text-dark); background: white; transition: border-color 0.16s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--gold); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  .page-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  /* SIDEBAR STICKY */
+  .sidebar-sticky { position: sticky; top: 76px; }
+
+  /* SAVE INDICATOR */
+  .save-indicator { font-size: 0.75rem; color: rgba(201,168,76,0.6); font-style: italic; }
+  .save-indicator.saved { color: var(--success); font-style: normal; }
+
+  /* STATUS BADGE INLINE */
+  .status-badge-unpaid  { background: rgba(201,168,76,0.15); color: #b8860b; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  .status-badge-paid    { background: rgba(39,174,96,0.12); color: #1a7a3a; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  .status-badge-overdue { background: rgba(192,57,43,0.12); color: var(--danger); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+
+  /* LINE ITEMS */
+  .line-item-row { display: grid; grid-template-columns: 1fr 80px 100px 100px 36px; gap: 8px; align-items: center; background: #f8fafd; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border); }
+  .line-item-row input { border: 1.5px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 0.83rem; font-family: 'DM Sans', sans-serif; }
+  .line-item-row input:focus { outline: none; border-color: var(--gold); }
+  .col-del { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+  .col-del:hover { color: var(--danger); }
+  .line-items-header { display: grid; grid-template-columns: 1fr 80px 100px 100px 36px; gap: 8px; padding: 0 12px 6px; }
+  .line-items-header span { font-size: 0.7rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* TOTALS */
+  .totals-box { background: #f8fafd; border-radius: 10px; padding: 14px 16px; border: 1.5px solid var(--border); }
+  .totals-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .totals-row:last-child { border-bottom: none; font-weight: 700; font-size: 1rem; color: var(--navy); }
+  .totals-row span:last-child { font-variant-numeric: tabular-nums; }
+
+  /* FINANCIALS */
+  .fin-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; border-bottom: 1px solid #f0f3f8; }
+  .fin-row:last-child { border-bottom: none; font-weight: 700; }
+  .fin-positive { color: var(--success); }
+  .fin-negative { color: var(--danger); }
+
+  /* PRINT */
+  @media print {
+    .toolbar, .app-topbar, .app-sidebar, .btn-add, .btn-danger, .col-del, .form-tools { display: none !important; }
+    .app-shell { display: block; }
+    .app-main { padding: 0; background: white; }
+    .page-wrapper { display: none; }
+    .card { box-shadow: none; border: 1px solid #ddd; margin-bottom: 12px; }
+    .preview-doc { display: block !important; }
+    .editor-section { display: none; }
+  }
+
+  /* INVOICE PREVIEW DOCUMENT */
+  .preview-doc { background: white; border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden; }
+
+  .preview-header { background: var(--navy); padding: 28px 32px; display: flex; justify-content: space-between; align-items: flex-start; }
+  .brand-lockup { display: flex; align-items: center; gap: 14px; }
+  .brand-icon { height: 72px; width: auto; display: block; filter: drop-shadow(0 2px 8px rgba(201,168,76,0.25)); }
+  .brand-text-wrap { display: flex; flex-direction: column; justify-content: center; }
+  .brand-name { font-family: 'Cormorant Garamond', serif; color: var(--gold-light); font-size: 1.55rem; font-weight: 700; letter-spacing: 0.08em; line-height: 1.1; display: block; }
+  .brand-sub-text { font-family: 'Cormorant Garamond', serif; color: rgba(201,168,76,0.65); font-size: 0.72rem; font-weight: 400; letter-spacing: 0.28em; display: block; margin-top: 4px; }
+  .preview-company-info { text-align: right; }
+  .preview-company-info p { color: rgba(255,255,255,0.75); font-size: 0.8rem; line-height: 1.7; }
+  .preview-company-info .company-name-hd { color: var(--gold-light); font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+  .preview-company-info .abn-line { color: var(--gold); font-size: 0.88rem; font-weight: 700; letter-spacing: 0.04em; margin-top: 4px; }
+
+  .preview-tax-bar { background: var(--gold); padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .tax-invoice-label { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 700; color: var(--navy); letter-spacing: 0.06em; }
+  .meta-items { display: flex; gap: 28px; }
+  .meta-item { text-align: center; }
+  .meta-item label { display: block; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(13,31,60,0.6); }
+  .meta-item span { font-size: 0.85rem; font-weight: 600; color: var(--navy); }
+  .meta-item .due-value { color: var(--navy); }
+  .meta-item.highlight-due span { color: #7b0000; }
+
+  .preview-body { padding: 28px 32px; }
+  .preview-addresses { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  .address-block label { display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .address-block p { font-size: 0.85rem; color: var(--text-dark); line-height: 1.6; }
+  .address-block .client-name { font-weight: 600; font-size: 0.95rem; }
+
+  .job-description-bar { background: var(--cream); border-left: 4px solid var(--gold); padding: 10px 16px; margin-bottom: 20px; border-radius: 0 6px 6px 0; }
+  .job-description-bar label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); }
+  .job-description-bar p { font-size: 0.88rem; color: var(--text-dark); margin-top: 2px; }
+
+  .preview-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.85rem; }
+  .preview-table thead tr { background: var(--navy); }
+  .preview-table th { padding: 10px 12px; text-align: left; color: var(--gold); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+  .preview-table th:last-child { text-align: right; }
+  .preview-table tbody tr { border-bottom: 1px solid #f0f3f8; }
+  .preview-table tbody tr:nth-child(even) { background: #fafbfd; }
+  .preview-table td { padding: 11px 12px; }
+  .preview-table td:last-child { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .preview-table .item-desc { font-weight: 500; }
+  .item-gst-tag { font-size: 0.7rem; background: rgba(39,174,96,0.1); color: #1a7a3a; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+  .item-no-gst-tag { font-size: 0.7rem; background: rgba(192,57,43,0.1); color: var(--danger); padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+
+  .preview-totals-section { display: flex; justify-content: flex-end; margin-bottom: 24px; }
+  .preview-totals-box { width: 280px; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .preview-totals-box .t-row { display: flex; justify-content: space-between; padding: 9px 14px; font-size: 0.84rem; border-bottom: 1px solid #f0f3f8; }
+  .preview-totals-box .t-row:last-child { border-bottom: none; }
+  .preview-totals-box .t-row.grand-total { background: var(--navy); color: var(--gold-light); font-weight: 700; font-size: 1rem; }
+  .preview-totals-box .t-row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .bas-section { margin-bottom: 24px; }
+  .bas-section label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); display: block; margin-bottom: 8px; }
+  .bas-preview-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; max-width: 420px; }
+  .bas-preview-table th { background: var(--navy-mid); color: var(--gold); padding: 7px 12px; text-align: left; font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; }
+  .bas-preview-table td { padding: 8px 12px; border-bottom: 1px solid #f0f3f8; font-variant-numeric: tabular-nums; }
+
+  .notes-payment-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .notes-box, .payment-box { background: var(--cream); border-radius: 8px; padding: 14px 16px; }
+  .notes-box label, .payment-box label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); display: block; margin-bottom: 8px; }
+  .notes-box p { font-size: 0.82rem; color: var(--text-dark); line-height: 1.6; }
+  .payment-box .pay-detail { display: flex; gap: 6px; font-size: 0.82rem; margin-bottom: 3px; }
+  .payment-box .pay-label { color: var(--text-mid); min-width: 72px; }
+  .payment-box .pay-value { color: var(--text-dark); font-weight: 500; }
+
+  .preview-footer { background: var(--navy); padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .preview-footer p { color: rgba(255,255,255,0.45); font-size: 0.72rem; }
+  .preview-footer .footer-abn { color: var(--gold); font-size: 0.8rem; font-weight: 600; }
+  .preview-footer .slogan { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-style: italic; color: rgba(201,168,76,0.6); }
+
+  @media (max-width: 900px) {
+    .app-shell { grid-template-columns: 1fr; }
+    .app-sidebar { display: none; }
+    .page-wrapper { grid-template-columns: 1fr; }
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    .notes-payment-section, .preview-addresses { grid-template-columns: 1fr; }
+  }
+</style>
+<script src="../assets/html2pdf.bundle.min.js"></script>
+<script src="../assets/app.js"></script>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-title">🧾 Invoice Builder</span>
+  <div class="toolbar-actions">
+    <span class="save-indicator" id="saveIndicator">Auto-save on</span>
+    <a href="invoices.html" class="btn btn-outline">← All Invoices</a>
+    <button class="btn btn-gold" onclick="exportPDF()">🖨 Save as PDF</button>
+  </div>
+</div>
+
+<div class="app-shell">
+  <!-- SIDEBAR NAV -->
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a href="quotes.html" class="nav-item"><span class="nav-icon">📋</span> Quotes</a>
+    <a href="invoices.html" class="nav-item active"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="clients.html" class="nav-item"><span class="nav-icon">👤</span> Clients</a>
+    <a href="jobs.html" class="nav-item"><span class="nav-icon">🔨</span> Jobs</a>
+    <a href="financials.html" class="nav-item"><span class="nav-icon">📊</span> Financials</a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="quote-builder.html" class="nav-item"><span class="nav-icon">✏️</span> Quote Builder</a>
+    <a href="rate-calculator.html" class="nav-item"><span class="nav-icon">💰</span> Rate Calculator</a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+
+  <main class="app-main">
+
+    <input type="hidden" id="invoiceId">
+    <input type="hidden" id="selectedClientId">
+
+    <div class="page-wrapper editor-section">
+
+      <!-- LEFT COLUMN -->
+      <div>
+
+        <!-- COMPANY DETAILS -->
+        <div class="card">
+          <div class="card-header"><span class="nav-icon">🏢</span><h3>Company Details</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>Company Name</label><input id="companyName" placeholder="Your business name"></div>
+            <div class="form-group"><label>ABN</label><input id="companyABN" placeholder="XX XXX XXX XXX"></div>
+            <div class="form-group"><label>Address</label><input id="companyAddress" placeholder="Business address"></div>
+            <div class="form-row">
+              <div class="form-group"><label>Phone</label><input id="companyPhone" placeholder="Business phone"></div>
+              <div class="form-group"><label>Email</label><input id="companyEmail" placeholder="Business email"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INVOICE DETAILS -->
+        <div class="card">
+          <div class="card-header"><span class="nav-icon">🧾</span><h3>Invoice Details</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Invoice Number</label><input id="invoiceNo" type="number" placeholder="1001"></div>
+              <div class="form-group"><label>Status</label>
+                <select id="invoiceStatus">
+                  <option value="unpaid">Unpaid</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Invoice Date</label><input id="invoiceDate" type="date"></div>
+              <div class="form-group"><label>Due Date</label><input id="dueDate" type="date"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Payment Terms</label>
+                <select id="paymentTerms" onchange="applyPaymentTerms()">
+                  <option value="7 days">7 days</option>
+                  <option value="14 days" selected>14 days</option>
+                  <option value="30 days">30 days</option>
+                  <option value="COD">COD</option>
+                  <option value="On completion">On completion</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Job Description</label><input id="jobDescription" placeholder="Brief job description"></div>
+            </div>
+            <div class="form-group"><label>Site Address</label><input id="jobSiteAddress" placeholder="Work site address"></div>
+            <div id="quoteRefRow" style="display:none">
+              <div style="background:var(--gold-pale);border-radius:7px;padding:8px 12px;font-size:0.8rem;color:var(--text-mid)">
+                🔗 Converted from Quote #<span id="quoteRefNum"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLIENT DETAILS -->
+        <div class="card">
+          <div class="card-header"><span class="nav-icon">👤</span><h3>Client Details</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Select Existing Client</label>
+              <select id="clientPicker" onchange="applyClientPicker()">
+                <option value="">— choose client or enter manually —</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Client / Company Name *</label><input id="clientName" placeholder="Client name"></div>
+              <div class="form-group"><label>Contact Person</label><input id="clientContact" placeholder="Contact person"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Phone</label><input id="clientPhone" placeholder="Client phone"></div>
+              <div class="form-group"><label>Email</label><input id="clientEmail" placeholder="Client email"></div>
+            </div>
+            <div class="form-group"><label>Address Line 1</label><input id="clientAddress1" placeholder="Street address"></div>
+            <div class="form-group"><label>Address Line 2</label><input id="clientAddress2" placeholder="Suburb, State, Postcode"></div>
+          </div>
+        </div>
+
+        <!-- PAYMENT SCHEDULE -->
+        <div class="card">
+          <div class="card-header"><span class="nav-icon">📅</span><h3>Payment Schedule</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Payment Structure</label>
+                <select id="paySchedule" onchange="applyPaySchedule()">
+                  <option value="full">Full amount on due date</option>
+                  <option value="50-50">50% deposit, 50% on completion</option>
+                  <option value="30-70">30% deposit, 70% on completion</option>
+                  <option value="custom">Custom split</option>
+                </select>
+              </div>
+              <div class="form-group" id="customSplitGroup" style="display:none">
+                <label>Deposit % (remainder = balance)</label>
+                <input id="depositPct" type="number" value="50" min="1" max="99" step="1" oninput="applyPaySchedule()">
+              </div>
+            </div>
+            <div id="scheduleBreakdown" style="background:var(--cream);border-radius:8px;padding:12px 14px;margin-top:4px;display:none">
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:6px">
+                <span style="color:var(--text-mid)">Deposit due on signing:</span>
+                <span style="font-weight:700;color:var(--navy)" id="depositAmtDisplay">$0.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.85rem">
+                <span style="color:var(--text-mid)">Balance due on completion:</span>
+                <span style="font-weight:700;color:var(--navy)" id="balanceAmtDisplay">$0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYMENT DETAILS -->
+        <div class="card">
+          <div class="card-header"><span class="nav-icon">💳</span><h3>Payment Details</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label>Account Name</label><input id="payAccountName" placeholder="Account name"></div>
+              <div class="form-group"><label>Bank</label><input id="payBank" placeholder="Bank name"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>BSB</label><input id="payBSB" placeholder="XXX-XXX"></div>
+              <div class="form-group"><label>Account Number</label><input id="payAccount" placeholder="Account number"></div>
+            </div>
+            <div class="form-group"><label>Payment Reference</label><input id="payRef" placeholder="e.g. INV-1001 or client name"></div>
+          </div>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT COLUMN -->
+      <div>
+
+        <!-- STICKY PREVIEW ACTIONS -->
+        <div class="sidebar-sticky">
+
+          <!-- LINE ITEMS -->
+          <div class="card">
+            <div class="card-header"><span class="nav-icon">✏</span><h3>Line Items</h3></div>
+            <div class="card-body">
+              <div class="line-items-header">
+                <span>Description</span><span>GST?</span><span>Qty</span><span>Rate ($)</span><span></span>
+              </div>
+              <div id="lineItemsContainer"></div>
+              <button class="btn-add" onclick="addLineItem()">➕ Add Line Item</button>
+              <div class="totals-box" style="margin-top:14px">
+                <div class="totals-row"><span>Subtotal (ex. GST)</span><span id="totSubtotal">$0.00</span></div>
+                <div class="totals-row"><span>GST (10%)</span><span id="totGST">$0.00</span></div>
+                <div class="totals-row"><span>Total (inc. GST)</span><span id="totTotal">$0.00</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTES -->
+          <div class="card">
+            <div class="card-header"><span class="nav-icon">📝</span><h3>Notes &amp; Payment Instructions</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Invoice Notes</label>
+                <textarea id="invoiceNotes" rows="3" placeholder="Payment instructions, terms, thank you message...">Please remit payment by the due date to the nominated bank account. Thank you for your business.</textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- BAS SUMMARY -->
+          <div class="card">
+            <div class="card-header"><span class="nav-icon">📊</span><h3>BAS Summary</h3></div>
+            <div class="card-body">
+              <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+                <thead><tr style="background:var(--navy)">
+                  <th style="padding:8px 10px;text-align:left;color:var(--gold);font-size:0.7rem;letter-spacing:0.09em">Tax Code</th>
+                  <th style="padding:8px 10px;text-align:left;color:var(--gold);font-size:0.7rem;letter-spacing:0.09em">GST Amount</th>
+                  <th style="padding:8px 10px;text-align:left;color:var(--gold);font-size:0.7rem;letter-spacing:0.09em">Ex-GST Amount</th>
+                </tr></thead>
+                <tbody id="basSummaryBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- JOB FINANCIALS -->
+          <div class="card">
+            <div class="card-header"><span class="nav-icon">📈</span><h3>Job Financials</h3></div>
+            <div class="card-body">
+              <div class="form-row-3">
+                <div class="form-group"><label>Material Cost</label><input id="materialCost" type="number" placeholder="0.00" min="0" step="0.01"></div>
+                <div class="form-group"><label>Labour Cost</label><input id="labourCost" type="number" placeholder="0.00" min="0" step="0.01"></div>
+                <div class="form-group"><label>Other Cost</label><input id="otherCost" type="number" placeholder="0.00" min="0" step="0.01"></div>
+              </div>
+              <div id="financialsDisplay"></div>
+            </div>
+          </div>
+
+        </div><!-- /sidebar-sticky -->
+      </div><!-- /right col -->
+    </div><!-- /page-wrapper -->
+
+    <!-- INVOICE PREVIEW -->
+    <div class="preview-doc" id="invoicePreview" style="max-width:1100px;margin:24px auto;display:none;">
+
+      <div class="preview-header">
+        <div class="brand-lockup">
+          <img class="brand-icon" src="../assets/logo.png" alt="HR Homestyle Projects">
+          <div class="brand-text-wrap">
+            <span class="brand-name" id="previewCompanyName">HR Homestyle Projects</span>
+            <span class="brand-sub-text">P R O J E C T S</span>
+          </div>
+        </div>
+        <div class="preview-company-info">
+          <p class="company-name-hd" id="previewCompanyName2">HR Homestyle Projects</p>
+          <p id="previewCompanyAddress"></p>
+          <p id="previewCompanyPhone"></p>
+          <p id="previewCompanyEmail"></p>
+          <p class="abn-line" id="previewABN"></p>
+        </div>
+      </div>
+
+      <div class="preview-tax-bar">
+        <div class="tax-invoice-label">TAX INVOICE</div>
+        <div class="meta-items">
+          <div class="meta-item">
+            <label>Invoice #</label>
+            <span id="prevInvNo">—</span>
+          </div>
+          <div class="meta-item">
+            <label>Invoice Date</label>
+            <span id="prevDate">—</span>
+          </div>
+          <div class="meta-item">
+            <label>Due Date</label>
+            <span id="prevDueDate">—</span>
+          </div>
+          <div class="meta-item">
+            <label>Terms</label>
+            <span id="prevTerms">14 days</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-body">
+
+        <div class="preview-addresses">
+          <div class="address-block">
+            <label>Bill To</label>
+            <p class="client-name" id="prevClientName">—</p>
+            <p id="prevClientContact"></p>
+            <p id="prevClientAddress"></p>
+            <p id="prevClientPhone"></p>
+            <p id="prevClientEmail"></p>
+          </div>
+          <div class="address-block">
+            <label>Work Details</label>
+            <p><strong id="prevJobDesc">—</strong></p>
+            <p id="prevJobSite" style="margin-top:4px;color:var(--text-mid)"></p>
+          </div>
+        </div>
+
+        <div class="job-description-bar">
+          <label>Description of Works</label>
+          <p id="prevJobDescBar">—</p>
+        </div>
+
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th style="width:42%">Description</th>
+              <th style="text-align:center">GST</th>
+              <th style="text-align:center">Qty</th>
+              <th style="text-align:right">Unit Rate</th>
+              <th style="text-align:right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="prevLineItems"></tbody>
+        </table>
+
+        <div class="preview-totals-section">
+          <div class="preview-totals-box">
+            <div class="t-row"><span>Subtotal (ex. GST)</span><span id="prevSubtotal">$0.00</span></div>
+            <div class="t-row"><span>GST (10%)</span><span id="prevGST">$0.00</span></div>
+            <div class="t-row grand-total"><span>TOTAL (inc. GST)</span><span id="prevTotal">$0.00</span></div>
+          </div>
+        </div>
+
+        <!-- Payment Schedule (only rendered when split payment) -->
+        <div id="prevScheduleSection" style="display:none;margin-bottom:20px">
+          <div style="background:var(--navy);border-radius:8px;overflow:hidden">
+            <div style="padding:9px 16px;border-bottom:1px solid rgba(255,255,255,0.1)">
+              <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold)">Payment Schedule</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr">
+              <div style="padding:14px 20px;border-right:1px solid rgba(255,255,255,0.1)">
+                <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Deposit — Due on Signing</div>
+                <div style="font-size:1.3rem;font-weight:700;color:var(--gold-light)" id="prevDepositAmt">$0.00</div>
+              </div>
+              <div style="padding:14px 20px">
+                <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:4px">Balance — Due on Completion</div>
+                <div style="font-size:1.3rem;font-weight:700;color:var(--gold-light)" id="prevBalanceAmt">$0.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-payment-section">
+          <div class="notes-box">
+            <label>Notes &amp; Terms</label>
+            <p id="prevNotes"></p>
+          </div>
+          <div class="payment-box">
+            <label>Payment Details</label>
+            <div class="pay-detail"><span class="pay-label">Account:</span><span class="pay-value" id="prevPayName"></span></div>
+            <div class="pay-detail"><span class="pay-label">Bank:</span><span class="pay-value" id="prevPayBank"></span></div>
+            <div class="pay-detail"><span class="pay-label">BSB:</span><span class="pay-value" id="prevPayBSB"></span></div>
+            <div class="pay-detail"><span class="pay-label">Acc No:</span><span class="pay-value" id="prevPayAcc"></span></div>
+            <div class="pay-detail"><span class="pay-label">Reference:</span><span class="pay-value" id="prevPayRef"></span></div>
+          </div>
+        </div>
+
+        <div class="bas-section">
+          <label>GST Summary (BAS)</label>
+          <table class="bas-preview-table">
+            <thead><tr>
+              <th>Tax Code</th><th>GST Amount</th><th>Ex-GST Amount</th>
+            </tr></thead>
+            <tbody id="prevBAS"></tbody>
+          </table>
+        </div>
+
+      </div><!-- /preview-body -->
+
+      <div class="preview-footer">
+        <p class="footer-abn" id="prevFooterABN"></p>
+        <p class="slogan">Quality Work, Every Time</p>
+        <p>Thank you for your business</p>
+      </div>
+
+    </div><!-- /invoicePreview -->
+
+  </main>
+</div><!-- /app-shell -->
+
+<script>
+// Line items state
+let lineItems = [];
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get('id');
+
+  if (editId) {
+    const inv = InvoiceStore.get(editId);
+    if (inv) {
+      document.getElementById('invoiceId').value = inv.id;
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null) el.value = val; };
+      set('companyName',    inv.company?.name);
+      set('companyABN',     inv.company?.abn);
+      set('companyAddress', inv.company?.address);
+      set('companyPhone',   inv.company?.phone);
+      set('companyEmail',   inv.company?.email);
+      set('invoiceNo',      inv.number);
+      set('invoiceDate',    inv.date);
+      set('dueDate',        inv.dueDate);
+      set('paymentTerms',   inv.paymentTerms);
+      set('invoiceStatus',  inv.status);
+      set('jobDescription', inv.jobDescription);
+      set('jobSiteAddress', inv.siteAddress);
+      set('clientName',     inv.clientName);
+      set('clientContact',  inv.contact);
+      set('clientPhone',    inv.clientPhone);
+      set('clientEmail',    inv.clientEmail);
+      set('clientAddress1', inv.address1);
+      set('clientAddress2', inv.address2);
+      set('invoiceNotes',   inv.notes);
+      set('payAccountName', inv.banking?.accountName);
+      set('payBank',        inv.banking?.bank);
+      set('payBSB',         inv.banking?.bsb);
+      set('payAccount',     inv.banking?.account);
+      set('payRef',         inv.banking?.ref);
+      set('materialCost',   inv.materialCost);
+      set('labourCost',     inv.labourCost);
+      set('otherCost',      inv.otherCost);
+      set('paySchedule',    inv.paySchedule || 'full');
+      set('depositPct',     inv.depositPct  || '50');
+      if (inv.sourceQuoteNumber) {
+        document.getElementById('quoteRefRow').style.display = 'block';
+        document.getElementById('quoteRefNum').textContent = inv.sourceQuoteNumber;
+      }
+      lineItems = inv.items || [];
+    }
+  } else {
+    // New invoice
+    const newId = Utils.id();
+    document.getElementById('invoiceId').value = newId;
+    document.getElementById('invoiceNo').value = InvoiceStore.nextNumber();
+    const today = new Date();
+    document.getElementById('invoiceDate').value = today.toISOString().split('T')[0];
+    const due = new Date(today); due.setDate(due.getDate() + 14);
+    document.getElementById('dueDate').value = due.toISOString().split('T')[0];
+    const s = SettingsStore.get();
+    if (s.name)    document.getElementById('companyName').value    = s.name;
+    if (s.abn)     document.getElementById('companyABN').value     = s.abn;
+    if (s.address) document.getElementById('companyAddress').value = s.address;
+    if (s.phone)   document.getElementById('companyPhone').value   = s.phone;
+    if (s.email)   document.getElementById('companyEmail').value   = s.email;
+    if (s.accName) document.getElementById('payAccountName').value = s.accName;
+    if (s.bank)    document.getElementById('payBank').value        = s.bank;
+    if (s.bsb)     document.getElementById('payBSB').value         = s.bsb;
+    if (s.accNum)  document.getElementById('payAccount').value     = s.accNum;
+    lineItems = [{ desc: '', qty: 1, rate: '', gst: true }];
+  }
+
+  // Populate client picker
+  const picker = document.getElementById('clientPicker');
+  ClientStore.getAll().forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name + (c.contact ? ' — ' + c.contact : '');
+    picker.appendChild(opt);
+  });
+
+  renderLineItems();
+  attachListeners();
+  updatePreview();
+  document.getElementById('invoicePreview').style.display = 'block';
+});
+
+// ── LISTENERS ────────────────────────────────────────────────────────────
+function attachListeners() {
+  const ids = [
+    'companyName','companyABN','companyAddress','companyPhone','companyEmail',
+    'invoiceNo','invoiceDate','dueDate','paymentTerms','invoiceStatus',
+    'jobDescription','jobSiteAddress',
+    'clientName','clientContact','clientPhone','clientEmail','clientAddress1','clientAddress2',
+    'invoiceNotes','payAccountName','payBank','payBSB','payAccount','payRef',
+    'materialCost','labourCost','otherCost',
+    'paySchedule','depositPct'
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input',  () => { updatePreview(); saveToStore(); });
+    if (el) el.addEventListener('change', () => { updatePreview(); saveToStore(); });
+  });
+}
+
+// ── PAYMENT SCHEDULE ──────────────────────────────────────────────────────
+function applyPaySchedule() {
+  const sched   = document.getElementById('paySchedule')?.value || 'full';
+  const custGrp = document.getElementById('customSplitGroup');
+  const breakdown = document.getElementById('scheduleBreakdown');
+  custGrp.style.display = sched === 'custom' ? '' : 'none';
+
+  if (sched === 'full') {
+    breakdown.style.display = 'none';
+    updatePreview(); saveToStore(); return;
+  }
+
+  let depositPct = 50;
+  if (sched === '50-50') depositPct = 50;
+  else if (sched === '30-70') depositPct = 30;
+  else if (sched === 'custom') depositPct = parseFloat(document.getElementById('depositPct')?.value) || 50;
+
+  // Get current total
+  const total = lineItems.reduce((s,i) => {
+    const amt = (parseFloat(i.qty)||0)*(parseFloat(i.rate)||0);
+    return s + amt + (i.gst !== false ? amt * 0.1 : 0);
+  }, 0);
+
+  const deposit = total * (depositPct / 100);
+  const balance = total - deposit;
+
+  document.getElementById('depositAmtDisplay').textContent  = '$' + deposit.toFixed(2);
+  document.getElementById('balanceAmtDisplay').textContent  = '$' + balance.toFixed(2);
+  breakdown.style.display = '';
+  updatePreview(); saveToStore();
+}
+
+// ── PAYMENT TERMS ────────────────────────────────────────────────────────
+function applyPaymentTerms() {
+  const terms = document.getElementById('paymentTerms').value;
+  const invDate = document.getElementById('invoiceDate').value;
+  if (!invDate) return;
+  const d = new Date(invDate);
+  if (terms === '7 days')  { d.setDate(d.getDate() + 7); }
+  else if (terms === '14 days') { d.setDate(d.getDate() + 14); }
+  else if (terms === '30 days') { d.setDate(d.getDate() + 30); }
+  else if (terms === 'COD' || terms === 'On completion') {
+    document.getElementById('dueDate').value = invDate;
+    updatePreview(); saveToStore(); return;
+  } else { return; }
+  document.getElementById('dueDate').value = d.toISOString().split('T')[0];
+  updatePreview(); saveToStore();
+}
+
+// ── CLIENT PICKER ────────────────────────────────────────────────────────
+function applyClientPicker() {
+  const picker = document.getElementById('clientPicker');
+  const cid = picker?.value;
+  if (!cid) return;
+  const client = ClientStore.get(cid);
+  if (!client) return;
+  document.getElementById('selectedClientId').value = cid;
+  document.getElementById('clientName').value     = client.name    || '';
+  document.getElementById('clientContact').value  = client.contact || '';
+  document.getElementById('clientPhone').value    = client.phone   || '';
+  document.getElementById('clientEmail').value    = client.email   || '';
+  document.getElementById('clientAddress1').value = client.address || '';
+  document.getElementById('clientAddress2').value = '';
+  updatePreview(); saveToStore();
+}
+
+// ── LINE ITEMS ────────────────────────────────────────────────────────────
+function renderLineItems() {
+  const container = document.getElementById('lineItemsContainer');
+  container.innerHTML = '';
+  lineItems.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+    row.innerHTML = `
+      <input type="text"   placeholder="Description" value="${escHtml(item.desc||'')}"   oninput="lineItems[${i}].desc=this.value;calcTotals();updatePreview();saveToStore()">
+      <select onchange="lineItems[${i}].gst=this.value==='yes';calcTotals();updatePreview();saveToStore()" style="border:1.5px solid var(--border);border-radius:6px;padding:7px 6px;font-size:0.83rem;font-family:'DM Sans',sans-serif">
+        <option value="yes" ${item.gst!==false?'selected':''}>Yes</option>
+        <option value="no"  ${item.gst===false ?'selected':''}>No</option>
+      </select>
+      <input type="number" placeholder="1"    value="${item.qty||''}"  min="0" step="0.5"   oninput="lineItems[${i}].qty=this.value;calcTotals();updatePreview();saveToStore()">
+      <input type="number" placeholder="0.00" value="${item.rate||''}" min="0" step="0.01"  oninput="lineItems[${i}].rate=this.value;calcTotals();updatePreview();saveToStore()">
+      <button class="col-del" onclick="removeItem(${i})">✕</button>
+    `;
+    container.appendChild(row);
+  });
+  calcTotals();
+}
+
+function addLineItem() {
+  lineItems.push({ desc: '', qty: 1, rate: '', gst: true });
+  renderLineItems();
+  updatePreview();
+  saveToStore();
+}
+
+function removeItem(i) {
+  lineItems.splice(i, 1);
+  renderLineItems();
+  updatePreview();
+  saveToStore();
+}
+
+function calcTotals() {
+  let sub = 0, gst = 0;
+  lineItems.forEach(item => {
+    const amt = (parseFloat(item.qty)||0) * (parseFloat(item.rate)||0);
+    sub += amt;
+    if (item.gst !== false) gst += amt * 0.1;
+  });
+  document.getElementById('totSubtotal').textContent = '$' + sub.toFixed(2);
+  document.getElementById('totGST').textContent      = '$' + gst.toFixed(2);
+  document.getElementById('totTotal').textContent    = '$' + (sub + gst).toFixed(2);
+  // Keep payment schedule breakdown in sync with new totals
+  const schedVal = document.getElementById('paySchedule')?.value;
+  if (schedVal && schedVal !== 'full') applyPaySchedule();
+
+  // BAS
+  const basBody = document.getElementById('basSummaryBody');
+  if (basBody) {
+    basBody.innerHTML = `<tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f3f8">GST @ 10%</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f3f8;font-variant-numeric:tabular-nums">$${gst.toFixed(2)}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #f0f3f8;font-variant-numeric:tabular-nums">$${sub.toFixed(2)}</td>
+    </tr>`;
+  }
+
+  // Financials
+  const matCost = parseFloat(document.getElementById('materialCost')?.value) || 0;
+  const labCost = parseFloat(document.getElementById('labourCost')?.value)   || 0;
+  const othCost = parseFloat(document.getElementById('otherCost')?.value)    || 0;
+  const totalCosts = matCost + labCost + othCost;
+  const revenue    = sub;
+  const profit     = revenue - totalCosts;
+  const margin     = revenue > 0 ? (profit / revenue * 100) : 0;
+  const finDisplay = document.getElementById('financialsDisplay');
+  if (finDisplay) {
+    finDisplay.innerHTML = `
+      <div class="fin-row"><span>Total Costs</span><span>$${totalCosts.toFixed(2)}</span></div>
+      <div class="fin-row"><span>Revenue (ex. GST)</span><span>$${revenue.toFixed(2)}</span></div>
+      <div class="fin-row"><span>Gross Profit</span><span class="${profit>=0?'fin-positive':'fin-negative'}">$${profit.toFixed(2)}</span></div>
+      <div class="fin-row"><span>Margin</span><span class="${margin>=0?'fin-positive':'fin-negative'}">${totalCosts>0?margin.toFixed(1)+'%':'—'}</span></div>
+    `;
+  }
+}
+
+// ── PREVIEW UPDATE ────────────────────────────────────────────────────────
+function updatePreview() {
+  const g = id => document.getElementById(id)?.value || '';
+  const s = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  const abn = g('companyABN');
+  s('previewCompanyName',  g('companyName'));
+  s('previewCompanyName2', g('companyName'));
+  s('previewCompanyAddress', g('companyAddress'));
+  s('previewCompanyPhone',   g('companyPhone'));
+  s('previewCompanyEmail',   g('companyEmail'));
+  s('previewABN',    abn ? 'ABN  ' + abn : '');
+  s('prevFooterABN', abn ? 'ABN  ' + abn : '');
+
+  s('prevInvNo',   'INV-' + (g('invoiceNo') || '?'));
+  s('prevDate',    fmtDate(g('invoiceDate')));
+  s('prevDueDate', fmtDate(g('dueDate')));
+  s('prevTerms',   g('paymentTerms') || '14 days');
+
+  s('prevClientName',    g('clientName') || '—');
+  s('prevClientContact', g('clientContact'));
+  s('prevClientAddress', [g('clientAddress1'), g('clientAddress2')].filter(Boolean).join(', '));
+  s('prevClientPhone',   g('clientPhone'));
+  s('prevClientEmail',   g('clientEmail'));
+
+  s('prevJobDesc',    g('jobDescription') || '—');
+  s('prevJobSite',    g('jobSiteAddress'));
+  s('prevJobDescBar', g('jobDescription') || '—');
+
+  s('prevNotes',   g('invoiceNotes'));
+  s('prevPayName', g('payAccountName'));
+  s('prevPayBank', g('payBank'));
+  s('prevPayBSB',  g('payBSB'));
+  s('prevPayAcc',  g('payAccount'));
+  s('prevPayRef',  g('payRef') || ('INV-' + g('invoiceNo')));
+
+  // Payment schedule in preview
+  const sched = document.getElementById('paySchedule')?.value || 'full';
+  const schedSection = document.getElementById('prevScheduleSection');
+  if (schedSection) {
+    if (sched !== 'full') {
+      schedSection.style.display = '';
+      // Recalculate with current total
+      let total = 0;
+      lineItems.forEach(i => {
+        const amt = (parseFloat(i.qty)||0)*(parseFloat(i.rate)||0);
+        total += amt + (i.gst !== false ? amt * 0.1 : 0);
+      });
+      let depositPct = sched === '50-50' ? 50 : sched === '30-70' ? 30 : (parseFloat(document.getElementById('depositPct')?.value) || 50);
+      const deposit = total * (depositPct / 100);
+      const balance = total - deposit;
+      s('prevDepositAmt', '$' + deposit.toFixed(2));
+      s('prevBalanceAmt', '$' + balance.toFixed(2));
+    } else {
+      schedSection.style.display = 'none';
+    }
+  }
+
+  // Line items in preview
+  const prevBody = document.getElementById('prevLineItems');
+  prevBody.innerHTML = '';
+  let subtotal = 0, gstTotal = 0;
+  lineItems.forEach(item => {
+    const amt = (parseFloat(item.qty)||0) * (parseFloat(item.rate)||0);
+    subtotal += amt;
+    if (item.gst !== false) gstTotal += amt * 0.1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="item-desc">${escHtml(item.desc) || '<em style="color:#aaa">No description</em>'}
+        ${item.gst !== false ? '<span class="item-gst-tag">GST</span>' : '<span class="item-no-gst-tag">GST FREE</span>'}
+      </td>
+      <td style="text-align:center">${item.gst !== false ? 'Yes' : 'No'}</td>
+      <td style="text-align:center">${item.qty||0}</td>
+      <td style="text-align:right">$${(parseFloat(item.rate)||0).toFixed(2)}</td>
+      <td>$${amt.toFixed(2)}</td>
+    `;
+    prevBody.appendChild(tr);
+  });
+
+  s('prevSubtotal', '$' + subtotal.toFixed(2));
+  s('prevGST',      '$' + gstTotal.toFixed(2));
+  s('prevTotal',    '$' + (subtotal + gstTotal).toFixed(2));
+
+  // BAS in preview
+  const prevBAS = document.getElementById('prevBAS');
+  if (prevBAS) {
+    prevBAS.innerHTML = `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f3f8">GST @ 10%</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f3f8;font-variant-numeric:tabular-nums">$${gstTotal.toFixed(2)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f3f8;font-variant-numeric:tabular-nums">$${subtotal.toFixed(2)}</td>
+    </tr>`;
+  }
+
+  showStatus('Preview updated');
+}
+
+// ── SAVE TO STORE ─────────────────────────────────────────────────────────
+function saveToStore() {
+  const g = id => document.getElementById(id)?.value || '';
+  const sub = lineItems.reduce((s,i) => s + (parseFloat(i.qty)||0)*(parseFloat(i.rate)||0), 0);
+  const gst = lineItems.reduce((s,i) => {
+    const amt = (parseFloat(i.qty)||0)*(parseFloat(i.rate)||0);
+    return s + (i.gst !== false ? amt * 0.1 : 0);
+  }, 0);
+  const iid = g('invoiceId') || Utils.id();
+  const inv = {
+    id: iid,
+    number: parseInt(g('invoiceNo')) || InvoiceStore.nextNumber(),
+    sourceQuoteId: InvoiceStore.get(iid)?.sourceQuoteId || null,
+    sourceQuoteNumber: InvoiceStore.get(iid)?.sourceQuoteNumber || null,
+    clientId: g('selectedClientId') || null,
+    clientName: g('clientName'),
+    contact: g('clientContact'),
+    address1: g('clientAddress1'),
+    address2: g('clientAddress2'),
+    clientPhone: g('clientPhone'),
+    clientEmail: g('clientEmail'),
+    jobDescription: g('jobDescription'),
+    siteAddress: g('jobSiteAddress'),
+    date: g('invoiceDate'),
+    dueDate: g('dueDate'),
+    paymentTerms: g('paymentTerms'),
+    paySchedule: g('paySchedule'),
+    depositPct: g('depositPct') || '50',
+    status: g('invoiceStatus'),
+    items: lineItems,
+    totals: { subtotal: sub, gst, total: sub + gst },
+    notes: g('invoiceNotes'),
+    company: {
+      name: g('companyName'), abn: g('companyABN'),
+      address: g('companyAddress'), phone: g('companyPhone'), email: g('companyEmail')
+    },
+    banking: {
+      accountName: g('payAccountName'), bank: g('payBank'),
+      bsb: g('payBSB'), account: g('payAccount'), ref: g('payRef')
+    },
+    materialCost: g('materialCost'),
+    labourCost: g('labourCost'),
+    otherCost: g('otherCost'),
+    updatedAt: new Date().toISOString()
+  };
+  if (InvoiceStore.get(iid)) { InvoiceStore.update(iid, inv); } else { InvoiceStore.add(inv); }
+  showStatus('Saved ✓', true);
+}
+
+// ── STATUS INDICATOR ─────────────────────────────────────────────────────
+function showStatus(msg, saved) {
+  const el = document.getElementById('saveIndicator');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = saved ? 'save-indicator saved' : 'save-indicator';
+  setTimeout(() => { el.textContent = 'Auto-save on'; el.className = 'save-indicator'; }, 2500);
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────────────
+function exportPDF() {
+  const preview = document.getElementById('invoicePreview');
+  const wasHidden = preview.style.display === 'none';
+  if (wasHidden) preview.style.display = 'block';
+
+  const invNum = document.getElementById('invoiceNo')?.value?.trim() || 'invoice';
+  const filename = `HR-Invoice-INV-${invNum}.pdf`;
+
+  // Small delay lets the browser fully paint the preview before capture
+  setTimeout(() => {
+    html2pdf().set({
+      margin: [10, 10, 10, 10],
+      filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false, imageTimeout: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(preview).save().then(() => {
+      if (wasHidden) preview.style.display = 'none';
+    });
+  }, 150);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+</script>
+</body>
+</html>

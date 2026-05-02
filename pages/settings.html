@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — HR Homestyle Projects</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-topbar">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logo.png" alt="HR Homestyle Projects">
+      <div class="brand-text"><span class="brand-name">HR HOMESTYLE</span><span class="brand-sub">P R O J E C T S</span></div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <div id="topbar-date"></div>
+      <div id="topbar-abn"></div>
+    </div>
+  </header>
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a href="quotes.html" class="nav-item"><span class="nav-icon">📋</span> Quotes</a>
+    <a href="invoices.html" class="nav-item"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="clients.html" class="nav-item"><span class="nav-icon">👤</span> Clients</a>
+    <a href="jobs.html" class="nav-item"><span class="nav-icon">🔨</span> Jobs</a>
+    <a href="financials.html" class="nav-item"><span class="nav-icon">📊</span> Financials</a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="quote-builder.html" class="nav-item"><span class="nav-icon">✏️</span> Quote Builder</a>
+    <a href="rate-calculator.html" class="nav-item"><span class="nav-icon">💰</span> Rate Calculator</a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item active"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Settings</div>
+        <div class="page-subtitle">Company details and app preferences</div>
+      </div>
+      <button onclick="saveSettings()" class="btn btn-gold">💾 Save Settings</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>🏢 Company Details</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>Company Name</label><input id="s_name" value="HR Homestyle Projects"></div>
+            <div class="form-group"><label>ABN</label><input id="s_abn" value="33 292 735 593"></div>
+            <div class="form-group"><label>Phone</label><input id="s_phone" value="+61 410 429 982"></div>
+            <div class="form-group"><label>Email</label><input id="s_email" value="info@homestyleprojects.com"></div>
+            <div class="form-group"><label>Address</label><input id="s_address" value="2 Scenery Drive, Clyde North VIC 3978"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🏦 Banking Details</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>Account Name</label><input id="s_accname" value="HR Homestyle Projects"></div>
+            <div class="form-row">
+              <div class="form-group"><label>Bank</label><input id="s_bank" value="NAB"></div>
+              <div class="form-group"><label>BSB</label><input id="s_bsb" value="083-004"></div>
+            </div>
+            <div class="form-group"><label>Account Number</label><input id="s_accnum" value="15-814-0433"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-header"><h3>📋 Quote Defaults</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label>Quote Validity (days)</label><input id="s_validity" type="number" value="30" min="1"></div>
+            <div class="form-group"><label>Deposit % (DBC Act compliant)</label><input id="s_deposit" type="number" value="10" min="0" max="10"></div>
+            <div class="form-group"><label>Default Quote Notes</label><textarea id="s_notes" rows="3">Work will resume after all parties agree and the required deposit is paid to the nominated bank account. Please read our Terms &amp; Conditions before accepting this quote.</textarea></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>🗄 Data Management</h3></div>
+          <div class="card-body">
+            <p style="font-size:0.84rem;color:var(--text-mid);margin-bottom:16px">Export all your data as a backup, or clear data if needed. All data is stored locally in your browser.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+              <button onclick="exportAllData()" class="btn btn-navy">⬇ Export All Data</button>
+              <button onclick="importData()" class="btn btn-outline">⬆ Import Data</button>
+              <button onclick="clearData()" class="btn btn-danger">🗑 Clear All Data</button>
+            </div>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>ℹ App Info</h3></div>
+          <div class="card-body">
+            <div style="font-size:0.84rem;color:var(--text-mid);line-height:1.8">
+              <div><strong>App Version:</strong> 1.0.0</div>
+              <div><strong>Last Updated:</strong> April 2026</div>
+              <div style="margin-top:12px;padding:12px;background:var(--cream);border-radius:8px;border-left:3px solid var(--gold)">
+                <strong style="color:var(--navy)">Adding new features with Claude Code:</strong><br>
+                Open this folder in Claude Code and ask it to add features. The app is structured with:<br>
+                <code style="font-size:0.78rem">index.html</code> — Dashboard<br>
+                <code style="font-size:0.78rem">pages/</code> — Individual pages<br>
+                <code style="font-size:0.78rem">assets/app.css</code> — All styles<br>
+                <code style="font-size:0.78rem">assets/app.js</code> — Shared utilities &amp; storage<br>
+                <code style="font-size:0.78rem">data/config.js</code> — Company config
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+function saveSettings() {
+  SettingsStore.set({
+    name:     document.getElementById('s_name').value,
+    abn:      document.getElementById('s_abn').value,
+    phone:    document.getElementById('s_phone').value,
+    email:    document.getElementById('s_email').value,
+    address:  document.getElementById('s_address').value,
+    accName:  document.getElementById('s_accname').value,
+    bank:     document.getElementById('s_bank').value,
+    bsb:      document.getElementById('s_bsb').value,
+    accNum:   document.getElementById('s_accnum').value,
+    validity: document.getElementById('s_validity').value,
+    deposit:  document.getElementById('s_deposit').value,
+    notes:    document.getElementById('s_notes').value,
+  });
+  Toast.success('Settings saved');
+}
+
+function exportAllData() {
+  const data = {
+    exported: new Date().toISOString(),
+    quotes:   QuoteStore.getAll(),
+    clients:  ClientStore.getAll(),
+    jobs:     JobStore.getAll(),
+    settings: SettingsStore.get()
+  };
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
+  a.download = 'HR-Homestyle-Backup-' + Utils.isoToday() + '.json';
+  a.click();
+  Toast.success('Data exported');
+}
+
+function importData() { document.getElementById('importFile').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.quotes)   QuoteStore.save(data.quotes);
+      if (data.clients)  ClientStore.save(data.clients);
+      if (data.jobs)     JobStore.save(data.jobs);
+      if (data.settings) SettingsStore.set(data.settings);
+      Toast.success('Data imported successfully');
+    } catch { Toast.error('Invalid backup file'); }
+  };
+  reader.readAsText(file);
+}
+
+function clearData() {
+  if (!confirm('This will delete ALL quotes, clients, and jobs. Are you absolutely sure?')) return;
+  if (!confirm('Last chance — this cannot be undone. Delete everything?')) return;
+  QuoteStore.save([]);
+  ClientStore.save([]);
+  JobStore.save([]);
+  Toast.success('All data cleared');
+}
+
+// Load saved settings
+const s = SettingsStore.get();
+if (s.name)    document.getElementById('s_name').value    = s.name;
+if (s.abn)     document.getElementById('s_abn').value     = s.abn;
+if (s.phone)   document.getElementById('s_phone').value   = s.phone;
+if (s.email)   document.getElementById('s_email').value   = s.email;
+if (s.address) document.getElementById('s_address').value = s.address;
+if (s.accName) document.getElementById('s_accname').value = s.accName;
+if (s.bank)    document.getElementById('s_bank').value    = s.bank;
+if (s.bsb)     document.getElementById('s_bsb').value     = s.bsb;
+if (s.accNum)  document.getElementById('s_accnum').value  = s.accNum;
+if (s.notes)   document.getElementById('s_notes').value   = s.notes;
+</script>
+</body>
+</html>

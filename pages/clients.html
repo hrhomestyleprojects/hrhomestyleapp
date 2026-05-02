@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clients — HR Homestyle Projects</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-topbar">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logo.png" alt="HR Homestyle Projects">
+      <div class="brand-text"><span class="brand-name">HR HOMESTYLE</span><span class="brand-sub">P R O J E C T S</span></div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <div id="topbar-date"></div>
+      <div id="topbar-abn"></div>
+    </div>
+  </header>
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a href="quotes.html" class="nav-item"><span class="nav-icon">📋</span> Quotes</a>
+    <a href="invoices.html" class="nav-item"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="clients.html" class="nav-item active"><span class="nav-icon">👤</span> Clients</a>
+    <a href="jobs.html" class="nav-item"><span class="nav-icon">🔨</span> Jobs</a>
+    <a href="financials.html" class="nav-item"><span class="nav-icon">📊</span> Financials</a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="quote-builder.html" class="nav-item"><span class="nav-icon">✏️</span> Quote Builder</a>
+    <a href="rate-calculator.html" class="nav-item"><span class="nav-icon">💰</span> Rate Calculator</a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Clients</div>
+        <div class="page-subtitle">Manage your client database</div>
+      </div>
+      <button onclick="Modal.open('addClientModal')" class="btn btn-gold">+ Add Client</button>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-body" style="padding:14px 20px">
+        <input id="clientSearch" type="text" placeholder="🔍  Search clients..." style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font-body);font-size:0.85rem">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th><th>Address</th><th>Quotes</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="clientsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD CLIENT MODAL -->
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Client</h3>
+      <button class="modal-close" onclick="Modal.close('addClientModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Company / Client Name *</label><input id="c_name" placeholder="e.g. Ray White Glen Waverley"></div>
+        <div class="form-group"><label>Contact Person</label><input id="c_contact" placeholder="e.g. John Smith"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone</label><input id="c_phone" placeholder="+61 4xx xxx xxx"></div>
+        <div class="form-group"><label>Email</label><input id="c_email" placeholder="email@example.com" type="email"></div>
+      </div>
+      <div class="form-group"><label>Address</label><input id="c_address" placeholder="123 Example Street, Suburb VIC 3000"></div>
+      <div class="form-group"><label>Notes</label><textarea id="c_notes" rows="2" placeholder="Any notes about this client..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="Modal.close('addClientModal')" class="btn btn-outline">Cancel</button>
+      <button onclick="saveClient()" class="btn btn-gold">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+function renderClients() {
+  const search = document.getElementById('clientSearch').value.toLowerCase();
+  let clients = ClientStore.getAll();
+  if (search) clients = clients.filter(c =>
+    (c.name||'').toLowerCase().includes(search) ||
+    (c.contact||'').toLowerCase().includes(search) ||
+    (c.email||'').toLowerCase().includes(search)
+  );
+  const quotes = QuoteStore.getAll();
+  const tbody = document.getElementById('clientsBody');
+  if (!clients.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:32px">No clients yet — add your first client above</td></tr>';
+    return;
+  }
+  tbody.innerHTML = clients.map(c => {
+    const cQuotes = quotes.filter(q => q.clientId === c.id).length;
+    return `<tr>
+      <td style="font-weight:600">${Utils.escHtml(c.name||'—')}</td>
+      <td>${Utils.escHtml(c.contact||'—')}</td>
+      <td>${Utils.escHtml(c.phone||'—')}</td>
+      <td><a href="mailto:${Utils.escHtml(c.email||'')}" style="color:var(--gold)">${Utils.escHtml(c.email||'—')}</a></td>
+      <td style="color:var(--text-mid);font-size:0.82rem">${Utils.escHtml(c.address||'—')}</td>
+      <td style="text-align:center">${cQuotes}</td>
+      <td>
+        <button onclick="deleteClient('${c.id}')" class="btn btn-danger btn-sm">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function saveClient() {
+  const name = document.getElementById('c_name').value.trim();
+  if (!name) { Toast.error('Client name is required'); return; }
+  const client = {
+    id: Utils.id(), name,
+    contact: document.getElementById('c_contact').value.trim(),
+    phone:   document.getElementById('c_phone').value.trim(),
+    email:   document.getElementById('c_email').value.trim(),
+    address: document.getElementById('c_address').value.trim(),
+    notes:   document.getElementById('c_notes').value.trim(),
+    created: Utils.isoToday()
+  };
+  ClientStore.add(client);
+  Modal.close('addClientModal');
+  ['c_name','c_contact','c_phone','c_email','c_address','c_notes'].forEach(id => document.getElementById(id).value = '');
+  renderClients();
+  Toast.success('Client added');
+}
+
+function deleteClient(id) {
+  if (!confirm('Delete this client?')) return;
+  ClientStore.delete(id);
+  renderClients();
+  Toast.success('Client deleted');
+}
+
+document.getElementById('clientSearch').addEventListener('input', renderClients);
+renderClients();
+</script>
+</body>
+</html>

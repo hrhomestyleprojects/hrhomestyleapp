@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoices — HR Homestyle Projects</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-topbar">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logo.png" alt="HR Homestyle Projects">
+      <div class="brand-text">
+        <span class="brand-name">HR HOMESTYLE</span>
+        <span class="brand-sub">P R O J E C T S</span>
+      </div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <div id="topbar-date"></div>
+      <div id="topbar-abn"></div>
+    </div>
+  </header>
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a href="quotes.html" class="nav-item"><span class="nav-icon">📋</span> Quotes</a>
+    <a href="invoices.html" class="nav-item active"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="clients.html" class="nav-item"><span class="nav-icon">👤</span> Clients</a>
+    <a href="jobs.html" class="nav-item"><span class="nav-icon">🔨</span> Jobs</a>
+    <a href="financials.html" class="nav-item"><span class="nav-icon">📊</span> Financials</a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="quote-builder.html" class="nav-item"><span class="nav-icon">✏️</span> Quote Builder</a>
+    <a href="rate-calculator.html" class="nav-item"><span class="nav-icon">💰</span> Rate Calculator</a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Invoices</div>
+        <div class="page-subtitle">Manage all your tax invoices</div>
+      </div>
+      <a href="invoice-builder.html" class="btn btn-gold">+ New Invoice</a>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid" id="invoiceStats" style="margin-bottom:20px"></div>
+
+    <!-- FILTERS -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-body" style="padding:14px 20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <input id="searchInput" type="text" placeholder="🔍  Search by client, invoice #, or job..."
+          style="flex:1;min-width:200px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font-body);font-size:0.85rem">
+        <select id="statusFilter" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font-body);font-size:0.85rem">
+          <option value="">All Statuses</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="paid">Paid</option>
+          <option value="overdue">Overdue</option>
+        </select>
+        <button onclick="exportCSV()" class="btn btn-outline btn-sm">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Client</th>
+              <th>Job Description</th>
+              <th>Subtotal</th>
+              <th>GST</th>
+              <th>Total</th>
+              <th>Invoice Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="invoicesBody">
+            <tr><td colspan="10" style="text-align:center;color:var(--text-light);padding:32px">
+              No invoices yet — <a href="quotes.html" style="color:var(--gold)">convert a quote to get started</a>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+const statusBadge = {
+  unpaid:  'badge-sent',
+  paid:    'badge-complete',
+  overdue: 'badge-expired'
+};
+const statusLabel = { unpaid: 'Unpaid', paid: 'Paid', overdue: 'Overdue' };
+
+function renderStats() {
+  const invs = InvoiceStore.getAll();
+  const unpaid  = invs.filter(i => i.status === 'unpaid');
+  const paid    = invs.filter(i => i.status === 'paid');
+  const overdue = invs.filter(i => i.status === 'overdue');
+  const unpaidVal  = unpaid.reduce((s,i) => s + (i.totals?.total || 0), 0);
+  const paidVal    = paid.reduce((s,i)   => s + (i.totals?.total || 0), 0);
+  const overdueVal = overdue.reduce((s,i)=> s + (i.totals?.total || 0), 0);
+  document.getElementById('invoiceStats').innerHTML = `
+    <div class="stat-card gold"><div class="stat-label">Unpaid</div><div class="stat-value">${unpaid.length}</div><div class="stat-sub">${Utils.fmtCurrency(unpaidVal)}</div></div>
+    <div class="stat-card green"><div class="stat-label">Paid</div><div class="stat-value">${paid.length}</div><div class="stat-sub">${Utils.fmtCurrency(paidVal)}</div></div>
+    <div class="stat-card navy"><div class="stat-label">Overdue</div><div class="stat-value" style="color:#e74c3c">${overdue.length}</div><div class="stat-sub" style="color:#e74c3c">${Utils.fmtCurrency(overdueVal)}</div></div>
+    <div class="stat-card green"><div class="stat-label">Total Invoiced</div><div class="stat-value" style="font-size:1.3rem">${Utils.fmtCurrency(unpaidVal+paidVal+overdueVal)}</div><div class="stat-sub">inc. GST</div></div>
+  `;
+}
+
+function renderInvoices() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  let invs = InvoiceStore.getAll();
+
+  // Auto-flag overdue
+  const today = Utils.isoToday();
+  invs.forEach(inv => {
+    if (inv.status === 'unpaid' && inv.dueDate && inv.dueDate < today) {
+      InvoiceStore.update(inv.id, { status: 'overdue' });
+      inv.status = 'overdue';
+    }
+  });
+
+  if (search) invs = invs.filter(i =>
+    (i.clientName||'').toLowerCase().includes(search) ||
+    ('INV-' + i.number).includes(search) ||
+    (i.jobDescription||'').toLowerCase().includes(search)
+  );
+  if (status) invs = invs.filter(i => i.status === status);
+
+  const tbody = document.getElementById('invoicesBody');
+  if (!invs.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-light);padding:32px">No invoices found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = invs.map(inv => {
+    const t = inv.totals || {};
+    const isDue = inv.status === 'overdue';
+    const dueStyle = isDue ? 'color:var(--danger);font-weight:600' : '';
+    return `<tr>
+      <td style="font-weight:700">
+        <a href="invoice-builder.html?id=${inv.id}" style="color:var(--gold)">INV-${inv.number}</a>
+        ${inv.sourceQuoteNumber ? `<div style="font-size:0.72rem;color:var(--text-light);font-weight:400">from Quote #${inv.sourceQuoteNumber}</div>` : ''}
+      </td>
+      <td>${Utils.escHtml(inv.clientName||'—')}</td>
+      <td style="color:var(--text-mid)">${Utils.escHtml(inv.jobDescription||'—')}</td>
+      <td style="font-variant-numeric:tabular-nums">${Utils.fmtCurrency(t.subtotal||0)}</td>
+      <td style="font-variant-numeric:tabular-nums">${Utils.fmtCurrency(t.gst||0)}</td>
+      <td style="font-variant-numeric:tabular-nums;font-weight:700">${Utils.fmtCurrency(t.total||0)}</td>
+      <td>${Utils.fmtDate(inv.date)}</td>
+      <td style="${dueStyle}">${Utils.fmtDate(inv.dueDate)}</td>
+      <td><span class="badge ${statusBadge[inv.status]||'badge-draft'}">${statusLabel[inv.status]||inv.status}</span></td>
+      <td>
+        <a href="invoice-builder.html?id=${inv.id}" class="btn btn-outline btn-sm">Edit</a>
+        <select onchange="updateStatus('${inv.id}',this.value)" style="margin-left:4px;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:0.78rem">
+          <option value="unpaid"  ${inv.status==='unpaid' ?'selected':''}>Unpaid</option>
+          <option value="paid"    ${inv.status==='paid'   ?'selected':''}>Paid</option>
+          <option value="overdue" ${inv.status==='overdue'?'selected':''}>Overdue</option>
+        </select>
+        <button onclick="deleteInvoice('${inv.id}')" class="btn btn-danger btn-sm" style="margin-left:4px">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStatus(id, status) {
+  InvoiceStore.update(id, { status, updatedAt: new Date().toISOString() });
+  renderInvoices();
+  renderStats();
+  Toast.success('Status updated');
+}
+
+function deleteInvoice(id) {
+  if (!confirm('Delete this invoice? This cannot be undone.')) return;
+  InvoiceStore.delete(id);
+  renderInvoices();
+  renderStats();
+  Toast.success('Invoice deleted');
+}
+
+function exportCSV() {
+  const invs = InvoiceStore.getAll();
+  if (!invs.length) { Toast.info('No invoices to export'); return; }
+  const rows = [['Invoice #','Client','Job','Subtotal','GST','Total','Invoice Date','Due Date','Status']];
+  invs.forEach(inv => {
+    const t = inv.totals || {};
+    rows.push([
+      'INV-' + inv.number,
+      inv.clientName||'', inv.jobDescription||'',
+      t.subtotal||0, t.gst||0, t.total||0,
+      inv.date||'', inv.dueDate||'', inv.status||''
+    ]);
+  });
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'HR-Invoices-' + Utils.isoToday() + '.csv';
+  a.click();
+  Toast.success('Exported to CSV');
+}
+
+document.getElementById('searchInput').addEventListener('input', renderInvoices);
+document.getElementById('statusFilter').addEventListener('change', renderInvoices);
+renderStats();
+renderInvoices();
+</script>
+</body>
+</html>

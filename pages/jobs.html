@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs — HR Homestyle Projects</title>
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="app-topbar">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logo.png" alt="HR Homestyle Projects">
+      <div class="brand-text"><span class="brand-name">HR HOMESTYLE</span><span class="brand-sub">P R O J E C T S</span></div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <div id="topbar-date"></div>
+      <div id="topbar-abn"></div>
+    </div>
+  </header>
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+    <a href="quotes.html" class="nav-item"><span class="nav-icon">📋</span> Quotes</a>
+    <a href="invoices.html" class="nav-item"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="clients.html" class="nav-item"><span class="nav-icon">👤</span> Clients</a>
+    <a href="jobs.html" class="nav-item active"><span class="nav-icon">🔨</span> Jobs</a>
+    <a href="financials.html" class="nav-item"><span class="nav-icon">📊</span> Financials</a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="quote-builder.html" class="nav-item"><span class="nav-icon">✏️</span> Quote Builder</a>
+    <a href="rate-calculator.html" class="nav-item"><span class="nav-icon">💰</span> Rate Calculator</a>
+    <div class="nav-divider"></div>
+    <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Jobs</div>
+        <div class="page-subtitle">Track active and completed jobs</div>
+      </div>
+      <button onclick="Modal.open('addJobModal')" class="btn btn-gold">+ New Job</button>
+    </div>
+
+    <div class="stat-grid" id="jobStats" style="margin-bottom:20px"></div>
+
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table class="data-table">
+          <thead>
+            <tr><th>Job Description</th><th>Client</th><th>Site Address</th><th>Value (inc. GST)</th><th>Start Date</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="jobsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD JOB MODAL -->
+<div class="modal-overlay" id="addJobModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Job</h3>
+      <button class="modal-close" onclick="Modal.close('addJobModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Job Description *</label><input id="j_desc" placeholder="e.g. Kitchen renovation — 45 Example St"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Client Name</label><input id="j_client" placeholder="Client or company name"></div>
+        <div class="form-group"><label>Site Address</label><input id="j_site" placeholder="Work site address"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Job Value (inc. GST) $</label><input id="j_value" type="number" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-group"><label>Start Date</label><input id="j_start" type="date"></div>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="j_status">
+          <option value="active">Active</option>
+          <option value="complete">Complete</option>
+          <option value="on-hold">On Hold</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="j_notes" rows="2" placeholder="Job notes, special instructions..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="Modal.close('addJobModal')" class="btn btn-outline">Cancel</button>
+      <button onclick="saveJob()" class="btn btn-gold">Save Job</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+function renderJobStats() {
+  const jobs = JobStore.getAll();
+  const active   = jobs.filter(j => j.status === 'active');
+  const complete = jobs.filter(j => j.status === 'complete');
+  const onHold   = jobs.filter(j => j.status === 'on-hold');
+  const totalVal = jobs.reduce((s,j) => s + (parseFloat(j.value)||0), 0);
+  document.getElementById('jobStats').innerHTML = `
+    <div class="stat-card navy"><div class="stat-label">Active</div><div class="stat-value">${active.length}</div></div>
+    <div class="stat-card green"><div class="stat-label">Complete</div><div class="stat-value">${complete.length}</div></div>
+    <div class="stat-card gold"><div class="stat-label">On Hold</div><div class="stat-value">${onHold.length}</div></div>
+    <div class="stat-card green"><div class="stat-label">Total Value</div><div class="stat-value" style="font-size:1.3rem">${Utils.fmtCurrency(totalVal)}</div><div class="stat-sub">inc. GST</div></div>
+  `;
+}
+
+function renderJobs() {
+  const jobs = JobStore.getAll();
+  const tbody = document.getElementById('jobsBody');
+  const statusBadge = { active:'badge-active', complete:'badge-complete', 'on-hold':'badge-draft' };
+  if (!jobs.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:32px">No jobs yet — add your first job</td></tr>';
+    return;
+  }
+  tbody.innerHTML = jobs.map(j => `<tr>
+    <td style="font-weight:600">${Utils.escHtml(j.description||'—')}</td>
+    <td>${Utils.escHtml(j.clientName||'—')}</td>
+    <td style="font-size:0.82rem;color:var(--text-mid)">${Utils.escHtml(j.siteAddress||'—')}</td>
+    <td style="font-variant-numeric:tabular-nums;font-weight:600">${Utils.fmtCurrency(j.value||0)}</td>
+    <td>${Utils.fmtDate(j.startDate)}</td>
+    <td><span class="badge ${statusBadge[j.status]||'badge-draft'}">${j.status||'active'}</span></td>
+    <td>
+      <select onchange="updateJobStatus('${j.id}',this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-size:0.78rem">
+        <option value="active"   ${j.status==='active'?'selected':''}>Active</option>
+        <option value="complete" ${j.status==='complete'?'selected':''}>Complete</option>
+        <option value="on-hold"  ${j.status==='on-hold'?'selected':''}>On Hold</option>
+      </select>
+      <button onclick="deleteJob('${j.id}')" class="btn btn-danger btn-sm" style="margin-left:4px">✕</button>
+    </td>
+  </tr>`).join('');
+}
+
+function saveJob() {
+  const desc = document.getElementById('j_desc').value.trim();
+  if (!desc) { Toast.error('Job description is required'); return; }
+  const job = {
+    id: Utils.id(), description: desc,
+    clientName:  document.getElementById('j_client').value.trim(),
+    siteAddress: document.getElementById('j_site').value.trim(),
+    value:       parseFloat(document.getElementById('j_value').value) || 0,
+    startDate:   document.getElementById('j_start').value,
+    status:      document.getElementById('j_status').value,
+    notes:       document.getElementById('j_notes').value.trim(),
+    created:     Utils.isoToday()
+  };
+  JobStore.add(job);
+  Modal.close('addJobModal');
+  renderJobs(); renderJobStats();
+  Toast.success('Job added');
+}
+
+function updateJobStatus(id, status) {
+  JobStore.update(id, { status });
+  renderJobs(); renderJobStats();
+  Toast.success('Status updated');
+}
+
+function deleteJob(id) {
+  if (!confirm('Delete this job?')) return;
+  JobStore.delete(id);
+  renderJobs(); renderJobStats();
+  Toast.success('Job deleted');
+}
+
+function checkQuoteConversion() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('from') !== 'quote') return;
+  const desc   = params.get('desc')   || '';
+  const client = params.get('client') || '';
+  const site   = params.get('site')   || '';
+  const value  = params.get('value')  || '';
+  const today  = new Date().toISOString().split('T')[0];
+  if (desc)   document.getElementById('j_desc').value   = desc;
+  if (client) document.getElementById('j_client').value = client;
+  if (site)   document.getElementById('j_site').value   = site;
+  if (value)  document.getElementById('j_value').value  = value;
+  document.getElementById('j_start').value = today;
+  Modal.open('addJobModal');
+}
+
+document.getElementById('j_start').value = Utils.isoToday();
+renderJobStats();
+renderJobs();
+checkQuoteConversion();
+</script>
+</body>
+</html>

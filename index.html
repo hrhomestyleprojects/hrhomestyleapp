@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Homestyle Projects — Business App</title>
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .activity-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f3f8; }
+  .activity-row:last-child { border-bottom: none; }
+  .activity-text { font-size: 0.84rem; color: var(--text); line-height: 1.4; }
+  .activity-time { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+  .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .quick-action {
+    background: white; border-radius: var(--radius); padding: 18px 16px;
+    text-align: center; cursor: pointer; border: 1.5px solid var(--border);
+    transition: all 0.18s; text-decoration: none; display: block;
+  }
+  .quick-action:hover { border-color: var(--gold); box-shadow: var(--shadow); transform: translateY(-2px); }
+  .quick-action .qa-icon { font-size: 1.6rem; display: block; margin-bottom: 8px; }
+  .quick-action .qa-label { font-size: 0.82rem; font-weight: 600; color: var(--navy); }
+  .expiry-warning { color: var(--danger); font-weight: 600; font-size: 0.78rem; }
+  .expiry-ok      { color: var(--text-light); font-size: 0.78rem; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <header class="app-topbar">
+    <a href="index.html" class="brand">
+      <img src="assets/logo.png" alt="HR Homestyle Projects">
+      <div class="brand-text">
+        <span class="brand-name">HR HOMESTYLE</span>
+        <span class="brand-sub">P R O J E C T S</span>
+      </div>
+    </a>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <div id="topbar-date"></div>
+      <div id="topbar-abn"></div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="app-sidebar">
+    <div class="sidebar-section-label">Main Menu</div>
+    <a href="index.html" class="nav-item active">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a href="pages/quotes.html" class="nav-item">
+      <span class="nav-icon">📋</span> Quotes
+    </a>
+    <a href="pages/invoices.html" class="nav-item"><span class="nav-icon">🧾</span> Invoices</a>
+    <a href="pages/clients.html" class="nav-item">
+      <span class="nav-icon">👤</span> Clients
+    </a>
+    <a href="pages/jobs.html" class="nav-item">
+      <span class="nav-icon">🔨</span> Jobs
+    </a>
+    <a href="pages/financials.html" class="nav-item">
+      <span class="nav-icon">📊</span> Financials
+    </a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Tools</div>
+    <a href="pages/quote-builder.html" class="nav-item">
+      <span class="nav-icon">✏️</span> Quote Builder
+    </a>
+    <a href="pages/rate-calculator.html" class="nav-item">
+      <span class="nav-icon">💰</span> Rate Calculator
+    </a>
+    <div class="nav-divider"></div>
+    <a href="pages/settings.html" class="nav-item">
+      <span class="nav-icon">⚙</span> Settings
+    </a>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">Welcome back — here's your business overview</div>
+      </div>
+      <a href="pages/quote-builder.html" class="btn btn-gold">✏️ New Quote</a>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card gold">
+        <div class="stat-label">Total Quotes</div>
+        <div class="stat-value" id="statTotalQuotes">0</div>
+        <div class="stat-sub">all time</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Accepted</div>
+        <div class="stat-value" id="statAccepted">0</div>
+        <div class="stat-sub">quotes won</div>
+      </div>
+      <div class="stat-card navy">
+        <div class="stat-label">Active Jobs</div>
+        <div class="stat-value" id="statActiveJobs">0</div>
+        <div class="stat-sub">in progress</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Expiring Soon</div>
+        <div class="stat-value" id="statExpiring">0</div>
+        <div class="stat-sub">within 7 days</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Pipeline Value</div>
+        <div class="stat-value" id="statPipeline" style="font-size:1.4rem">$0</div>
+        <div class="stat-sub">ex. GST (open quotes)</div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <a href="pages/quote-builder.html" class="quick-action">
+        <span class="qa-icon">📝</span>
+        <span class="qa-label">New Quote</span>
+      </a>
+      <a href="pages/clients.html" class="quick-action">
+        <span class="qa-icon">👤</span>
+        <span class="qa-label">Add Client</span>
+      </a>
+      <a href="pages/jobs.html" class="quick-action">
+        <span class="qa-icon">🔨</span>
+        <span class="qa-label">New Job</span>
+      </a>
+      <a href="pages/rate-calculator.html" class="quick-action">
+        <span class="qa-icon">💰</span>
+        <span class="qa-label">Rate Calc</span>
+      </a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+
+      <!-- RECENT QUOTES -->
+      <div class="card">
+        <div class="card-header">
+          <h3>📋 Recent Quotes</h3>
+          <div style="flex:1"></div>
+          <a href="pages/quotes.html" class="btn btn-outline btn-sm" style="color:var(--gold-light);border-color:rgba(201,168,76,0.3)">View All</a>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table" id="recentQuotesTable">
+            <thead>
+              <tr>
+                <th>Quote #</th>
+                <th>Client</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Expiry</th>
+              </tr>
+            </thead>
+            <tbody id="recentQuotesBody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:24px">No quotes yet — <a href="pages/quote-builder.html" style="color:var(--gold)">create your first quote</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ACTIVE JOBS -->
+      <div class="card">
+        <div class="card-header">
+          <h3>🔨 Active Jobs</h3>
+          <div style="flex:1"></div>
+          <a href="pages/jobs.html" class="btn btn-outline btn-sm" style="color:var(--gold-light);border-color:rgba(201,168,76,0.3)">View All</a>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table">
+            <thead>
+              <tr><th>Job</th><th>Client</th><th>Value</th><th>Status</th></tr>
+            </thead>
+            <tbody id="activeJobsBody">
+              <tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:24px">No active jobs — <a href="pages/jobs.html" style="color:var(--gold)">add a job</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div style="text-align:center;padding:20px 0;color:var(--text-light);font-size:0.75rem;border-top:1px solid var(--border);margin-top:8px">
+      HR Homestyle Projects  ·  ABN 33 292 735 593  ·  info@homestyleprojects.com  ·  Built for Comfort. Designed for Living.
+    </div>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+// ── DASHBOARD LOGIC ───────────────────────────────────────────────
+function loadDashboard() {
+  const quotes = QuoteStore.getAll();
+  const jobs   = JobStore.getAll();
+  const today  = new Date();
+  const in7    = new Date(); in7.setDate(in7.getDate() + 7);
+
+  // Stats
+  const accepted  = quotes.filter(q => q.status === 'accepted');
+  const openQ     = quotes.filter(q => ['draft','sent'].includes(q.status));
+  const expiring  = openQ.filter(q => q.expiry && new Date(q.expiry) <= in7 && new Date(q.expiry) >= today);
+  const pipeline  = openQ.reduce((s, q) => s + (q.totals?.subtotal || 0), 0);
+  const activeJobs= jobs.filter(j => j.status === 'active');
+
+  document.getElementById('statTotalQuotes').textContent = quotes.length;
+  document.getElementById('statAccepted').textContent    = accepted.length;
+  document.getElementById('statActiveJobs').textContent  = activeJobs.length;
+  document.getElementById('statExpiring').textContent    = expiring.length;
+  document.getElementById('statPipeline').textContent    = Utils.fmtCurrency(pipeline);
+
+  // Recent quotes table
+  const tbody = document.getElementById('recentQuotesBody');
+  if (quotes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:24px">No quotes yet — <a href="pages/quote-builder.html" style="color:var(--gold)">create your first quote</a></td></tr>';
+  } else {
+    tbody.innerHTML = quotes.slice(0, 6).map(q => {
+      const expired = q.expiry && new Date(q.expiry) < today && q.status !== 'accepted';
+      const expiryClass = expired ? 'expiry-warning' : 'expiry-ok';
+      const badges = { draft:'badge-draft', sent:'badge-sent', accepted:'badge-accepted', expired:'badge-expired' };
+      return `<tr>
+        <td><a href="pages/quote-builder.html?id=${q.id}" style="color:var(--gold);font-weight:600">#${q.number}</a></td>
+        <td>${Utils.escHtml(q.clientName || '—')}</td>
+        <td style="font-variant-numeric:tabular-nums">${Utils.fmtCurrency(q.totals?.total || 0)}</td>
+        <td><span class="badge ${badges[q.status] || 'badge-draft'}">${q.status || 'draft'}</span></td>
+        <td class="${expiryClass}">${Utils.fmtDate(q.expiry)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Active jobs
+  const jbody = document.getElementById('activeJobsBody');
+  if (activeJobs.length === 0) {
+    jbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:24px">No active jobs — <a href="pages/jobs.html" style="color:var(--gold)">add a job</a></td></tr>';
+  } else {
+    jbody.innerHTML = activeJobs.slice(0, 6).map(j => `
+      <tr>
+        <td style="font-weight:500">${Utils.escHtml(j.description || '—')}</td>
+        <td>${Utils.escHtml(j.clientName || '—')}</td>
+        <td>${Utils.fmtCurrency(j.value || 0)}</td>
+        <td><span class="badge badge-active">Active</span></td>
+      </tr>`).join('');
+  }
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
