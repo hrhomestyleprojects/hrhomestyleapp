@@ -257,7 +257,7 @@
       <div class="card">
         <div class="card-header">
           <span class="card-header-icon">📈</span>
-          <h3>Monthly Revenue (Last 12 Months)</h3>
+          <h3>Monthly Revenue Received (Last 12 Months)</h3>
         </div>
         <div class="card-body">
           <div class="chart-wrap">
@@ -290,10 +290,11 @@
           <thead>
             <tr>
               <th>Month</th>
-              <th>Jobs</th>
-              <th>Revenue (inc. GST)</th>
+              <th>Invoices</th>
+              <th>Paid (inc. GST)</th>
               <th>GST Collected</th>
-              <th>Ex-GST Revenue</th>
+              <th>Ex-GST Received</th>
+              <th>Outstanding</th>
               <th>vs Prior Month</th>
             </tr>
           </thead>
@@ -362,67 +363,79 @@ function curDec(n) {
 
 // ── MAIN RENDER ───────────────────────────────────────────────────
 function render() {
-  const quotes = QuoteStore.getAll();
-  const jobs   = JobStore.getAll();
-  const now    = new Date();
-  const thisMonthKey = monthKey(now.toISOString());
+  const quotes  = QuoteStore.getAll();
+  const jobs    = JobStore.getAll();
+  const invs    = InvoiceStore.getAll();
+  const now     = new Date();
+  const thisMonthKey  = monthKey(now.toISOString());
   const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthKey  = monthKey(lastMonthDate.toISOString());
 
-  // Filter accepted quotes by period
-  const accepted = quotes.filter(q => q.status === 'accepted' && periodFilter(q.date));
-  const allAccepted = quotes.filter(q => q.status === 'accepted');
+  // Auto-flag overdue invoices
+  const today = now.toISOString().split('T')[0];
+  invs.forEach(inv => {
+    if (inv.status === 'unpaid' && inv.dueDate && inv.dueDate < today) {
+      InvoiceStore.update(inv.id, { status: 'overdue' });
+      inv.status = 'overdue';
+    }
+  });
 
-  // Revenue totals
-  const revenue    = accepted.reduce((s, q) => s + (q.totals?.total || 0), 0);
-  const gstTotal   = accepted.reduce((s, q) => s + (q.totals?.gst || 0), 0);
-  const exGst      = revenue - gstTotal;
+  // Invoice buckets
+  const paidInvs    = invs.filter(i => i.status === 'paid');
+  const unpaidInvs  = invs.filter(i => i.status === 'unpaid');
+  const overdueInvs = invs.filter(i => i.status === 'overdue');
+
+  // Revenue = paid invoices filtered by period (use invoice date)
+  const paidPeriod  = paidInvs.filter(i => periodFilter(i.date));
+  const revenue     = paidPeriod.reduce((s, i) => s + (i.totals?.total || 0), 0);
+  const gstTotal    = paidPeriod.reduce((s, i) => s + (i.totals?.gst || 0), 0);
+  const exGst       = revenue - gstTotal;
+
+  // Outstanding (all unpaid + overdue regardless of period)
+  const outstandingVal  = [...unpaidInvs, ...overdueInvs].reduce((s, i) => s + (i.totals?.total || 0), 0);
+  const overdueVal      = overdueInvs.reduce((s, i) => s + (i.totals?.total || 0), 0);
+
+  // This month / last month revenue (paid invoices, always all-time for comparison)
+  const thisMonthRev = paidInvs
+    .filter(i => monthKey(i.date) === thisMonthKey)
+    .reduce((s, i) => s + (i.totals?.total || 0), 0);
+  const lastMonthRev = paidInvs
+    .filter(i => monthKey(i.date) === lastMonthKey)
+    .reduce((s, i) => s + (i.totals?.total || 0), 0);
+  const growthPct = lastMonthRev > 0
+    ? Math.round(((thisMonthRev - lastMonthRev) / lastMonthRev) * 100)
+    : null;
 
   // Pipeline: sent quotes + active jobs
-  const sentQuotes     = quotes.filter(q => q.status === 'sent');
-  const sentValue      = sentQuotes.reduce((s, q) => s + (q.totals?.total || 0), 0);
-  const activeJobs     = jobs.filter(j => j.status === 'active');
-  const activeJobVal   = activeJobs.reduce((s, j) => s + (parseFloat(j.value)||0), 0);
-  const pipelineVal    = sentValue + activeJobVal;
+  const sentQuotes   = quotes.filter(q => q.status === 'sent');
+  const sentValue    = sentQuotes.reduce((s, q) => s + (q.totals?.total || 0), 0);
+  const activeJobs   = jobs.filter(j => j.status === 'active');
+  const activeJobVal = activeJobs.reduce((s, j) => s + (parseFloat(j.value)||0), 0);
+  const pipelineVal  = sentValue + activeJobVal;
 
-  // Conversion rate (all time for accuracy)
+  // Quote conversion rate (all time)
   const totalQuoteable = quotes.filter(q => ['accepted','expired','sent'].includes(q.status)).length;
   const convRate = totalQuoteable > 0
     ? Math.round((quotes.filter(q => q.status === 'accepted').length / totalQuoteable) * 100)
     : 0;
 
-  // Avg job value (period)
-  const avgJob = accepted.length > 0 ? revenue / accepted.length : 0;
-
-  // Growth: this month vs last month (always from all accepted)
-  const thisMonthRev = allAccepted
-    .filter(q => monthKey(q.date) === thisMonthKey)
-    .reduce((s, q) => s + (q.totals?.total || 0), 0);
-  const lastMonthRev = allAccepted
-    .filter(q => monthKey(q.date) === lastMonthKey)
-    .reduce((s, q) => s + (q.totals?.total || 0), 0);
-  const growthPct = lastMonthRev > 0
-    ? Math.round(((thisMonthRev - lastMonthRev) / lastMonthRev) * 100)
-    : null;
-
-  // Outstanding quotes (expired)
-  const expiredVal = quotes.filter(q => q.status === 'expired')
-    .reduce((s, q) => s + (q.totals?.total || 0), 0);
+  // Avg paid invoice value (period)
+  const avgInv = paidPeriod.length > 0 ? revenue / paidPeriod.length : 0;
 
   // Completed jobs value
   const completedJobVal = jobs.filter(j => j.status === 'complete')
     .reduce((s, j) => s + (parseFloat(j.value)||0), 0);
 
-  renderPrimaryStats({ revenue, gstTotal, pipelineVal, convRate, growthPct, thisMonthRev, lastMonthRev });
-  renderSecondaryStats({ avgJob, exGst, activeJobVal, completedJobVal, sentValue, sentQuotes, activeJobs });
-  renderChart(allAccepted);
+  renderPrimaryStats({ revenue, gstTotal, outstandingVal, overdueVal, growthPct, thisMonthRev, lastMonthRev, paidCount: paidPeriod.length });
+  renderSecondaryStats({ avgInv, exGst, gstTotal, pipelineVal, outstandingVal, overdueVal, unpaidCount: unpaidInvs.length, overdueCount: overdueInvs.length, activeJobVal, completedJobVal, convRate });
+  renderChart(paidInvs);
   renderQuoteBreakdown(quotes);
-  renderMonthlyTable(allAccepted);
+  renderMonthlyTable(invs);
   renderJobPipeline(jobs, quotes);
 }
 
 // ── PRIMARY STATS ─────────────────────────────────────────────────
-function renderPrimaryStats({ revenue, gstTotal, pipelineVal, convRate, growthPct, thisMonthRev, lastMonthRev }) {
+function renderPrimaryStats({ revenue, gstTotal, outstandingVal, overdueVal, growthPct, thisMonthRev, lastMonthRev, paidCount }) {
   const trendHtml = growthPct === null
     ? `<span class="trend-pill trend-flat">— No prior month data</span>`
     : growthPct >= 0
@@ -431,19 +444,45 @@ function renderPrimaryStats({ revenue, gstTotal, pipelineVal, convRate, growthPc
 
   document.getElementById('primaryStats').innerHTML = `
     <div class="fin-stat highlight">
-      <div class="fin-stat-label">Revenue (inc. GST)</div>
-      <div class="fin-stat-value">${cur(revenue)}</div>
-      <div class="fin-stat-sub">From accepted quotes</div>
+      <div class="fin-stat-label">Revenue Received (inc. GST)</div>
+      <div class="fin-stat-value green">${cur(revenue)}</div>
+      <div class="fin-stat-sub">${paidCount} paid invoice${paidCount !== 1 ? 's' : ''}</div>
     </div>
     <div class="fin-stat">
-      <div class="fin-stat-label">This Month</div>
+      <div class="fin-stat-label">This Month Received</div>
       <div class="fin-stat-value">${cur(thisMonthRev)}</div>
       ${trendHtml}
     </div>
     <div class="fin-stat">
-      <div class="fin-stat-label">Pipeline Value</div>
-      <div class="fin-stat-value gold">${cur(pipelineVal)}</div>
-      <div class="fin-stat-sub">Sent quotes + active jobs</div>
+      <div class="fin-stat-label">Outstanding</div>
+      <div class="fin-stat-value gold">${cur(outstandingVal)}</div>
+      <div class="fin-stat-sub">${overdueVal > 0 ? `<span style="color:#e74c3c">${cur(overdueVal)} overdue</span>` : 'No overdue invoices'}</div>
+    </div>
+    <div class="fin-stat">
+      <div class="fin-stat-label">GST Collected</div>
+      <div class="fin-stat-value">${cur(gstTotal)}</div>
+      <div class="fin-stat-sub">From paid invoices</div>
+    </div>
+  `;
+}
+
+// ── SECONDARY STATS ───────────────────────────────────────────────
+function renderSecondaryStats({ avgInv, exGst, gstTotal, pipelineVal, outstandingVal, overdueVal, unpaidCount, overdueCount, activeJobVal, completedJobVal, convRate }) {
+  document.getElementById('secondaryStats').innerHTML = `
+    <div class="fin-stat">
+      <div class="fin-stat-label">Avg Invoice Value</div>
+      <div class="fin-stat-value">${cur(avgInv)}</div>
+      <div class="fin-stat-sub">Per paid invoice</div>
+    </div>
+    <div class="fin-stat">
+      <div class="fin-stat-label">Ex-GST Revenue</div>
+      <div class="fin-stat-value">${cur(exGst)}</div>
+      <div class="fin-stat-sub">Your net earnings</div>
+    </div>
+    <div class="fin-stat">
+      <div class="fin-stat-label">Unpaid Invoices</div>
+      <div class="fin-stat-value ${overdueCount > 0 ? '' : 'gold'}">${unpaidCount + overdueCount}</div>
+      <div class="fin-stat-sub">${overdueCount > 0 ? `<span style="color:#e74c3c">${overdueCount} overdue</span>` : 'All within terms'}</div>
     </div>
     <div class="fin-stat">
       <div class="fin-stat-label">Quote Conversion</div>
@@ -453,34 +492,8 @@ function renderPrimaryStats({ revenue, gstTotal, pipelineVal, convRate, growthPc
   `;
 }
 
-// ── SECONDARY STATS ───────────────────────────────────────────────
-function renderSecondaryStats({ avgJob, exGst, activeJobVal, completedJobVal, sentValue, sentQuotes, activeJobs }) {
-  document.getElementById('secondaryStats').innerHTML = `
-    <div class="fin-stat">
-      <div class="fin-stat-label">Avg Job Value</div>
-      <div class="fin-stat-value">${cur(avgJob)}</div>
-      <div class="fin-stat-sub">Per accepted quote</div>
-    </div>
-    <div class="fin-stat">
-      <div class="fin-stat-label">Ex-GST Revenue</div>
-      <div class="fin-stat-value">${cur(exGst)}</div>
-      <div class="fin-stat-sub">Your net earnings</div>
-    </div>
-    <div class="fin-stat">
-      <div class="fin-stat-label">Active Jobs Value</div>
-      <div class="fin-stat-value">${cur(activeJobVal)}</div>
-      <div class="fin-stat-sub">${activeJobs.length} job${activeJobs.length !== 1 ? 's' : ''} in progress</div>
-    </div>
-    <div class="fin-stat">
-      <div class="fin-stat-label">Completed Jobs Value</div>
-      <div class="fin-stat-value green">${cur(completedJobVal)}</div>
-      <div class="fin-stat-sub">All time delivered work</div>
-    </div>
-  `;
-}
-
-// ── REVENUE CHART (last 12 months) ────────────────────────────────
-function renderChart(allAccepted) {
+// ── REVENUE CHART (last 12 months, paid invoices) ─────────────────
+function renderChart(paidInvs) {
   const now = new Date();
   const months = [];
   for (let i = 11; i >= 0; i--) {
@@ -489,10 +502,10 @@ function renderChart(allAccepted) {
   }
 
   const byMonth = {};
-  allAccepted.forEach(q => {
-    if (!q.date) return;
-    const k = monthKey(q.date);
-    byMonth[k] = (byMonth[k] || 0) + (q.totals?.total || 0);
+  paidInvs.forEach(inv => {
+    if (!inv.date) return;
+    const k = monthKey(inv.date);
+    byMonth[k] = (byMonth[k] || 0) + (inv.totals?.total || 0);
   });
 
   const vals = months.map(k => byMonth[k] || 0);
@@ -511,7 +524,7 @@ function renderChart(allAccepted) {
       </div>`;
   }).join('');
 
-  document.getElementById('revenueChart').innerHTML = bars || '<p class="empty-state">No revenue data yet</p>';
+  document.getElementById('revenueChart').innerHTML = bars || '<p class="empty-state">No paid invoices yet</p>';
 }
 
 // ── QUOTE BREAKDOWN ───────────────────────────────────────────────
@@ -556,8 +569,8 @@ function renderQuoteBreakdown(quotes) {
     : '<p class="empty-state">No quotes yet</p>';
 }
 
-// ── MONTHLY TABLE ─────────────────────────────────────────────────
-function renderMonthlyTable(allAccepted) {
+// ── MONTHLY TABLE (from invoices, split paid/outstanding) ─────────
+function renderMonthlyTable(invs) {
   const now = new Date();
   const months = [];
   for (let i = 11; i >= 0; i--) {
@@ -565,30 +578,38 @@ function renderMonthlyTable(allAccepted) {
     months.push(monthKey(d.toISOString()));
   }
 
+  // Build by-month buckets using invoice date
   const byMonth = {};
-  allAccepted.forEach(q => {
-    if (!q.date) return;
-    const k = monthKey(q.date);
-    if (!byMonth[k]) byMonth[k] = { count: 0, total: 0, gst: 0 };
-    byMonth[k].count++;
-    byMonth[k].total += (q.totals?.total || 0);
-    byMonth[k].gst   += (q.totals?.gst || 0);
+  invs.forEach(inv => {
+    if (!inv.date) return;
+    const k = monthKey(inv.date);
+    if (!byMonth[k]) byMonth[k] = { invoices: 0, paid: 0, paidGst: 0, outstanding: 0 };
+    byMonth[k].invoices++;
+    if (inv.status === 'paid') {
+      byMonth[k].paid    += (inv.totals?.total || 0);
+      byMonth[k].paidGst += (inv.totals?.gst   || 0);
+    } else {
+      byMonth[k].outstanding += (inv.totals?.total || 0);
+    }
   });
 
   const currentKey = monthKey(now.toISOString());
   let rows = '';
   let hasData = false;
 
-  months.slice().reverse().forEach((k, i) => {
+  // Show most recent first
+  months.slice().reverse().forEach((k, idx) => {
     const d = byMonth[k];
-    if (!d || d.total === 0) return;
+    if (!d || d.invoices === 0) return;
     hasData = true;
-    const prevKey = months[months.length - 2 - i];
-    const prevTotal = byMonth[prevKey]?.total || 0;
+    // Compare paid revenue vs previous month in the ordered list
+    const orderedIdx = months.indexOf(k);
+    const prevKey = orderedIdx > 0 ? months[orderedIdx - 1] : null;
+    const prevPaid = prevKey ? (byMonth[prevKey]?.paid || 0) : 0;
     let vsHtml = '<span style="color:var(--text-light)">—</span>';
-    if (prevTotal > 0) {
-      const diff = d.total - prevTotal;
-      const pct  = Math.round((diff / prevTotal) * 100);
+    if (prevPaid > 0) {
+      const diff = d.paid - prevPaid;
+      const pct  = Math.round((diff / prevPaid) * 100);
       vsHtml = diff >= 0
         ? `<span class="positive">▲ ${pct}%</span>`
         : `<span class="negative">▼ ${Math.abs(pct)}%</span>`;
@@ -596,17 +617,18 @@ function renderMonthlyTable(allAccepted) {
     rows += `
       <tr class="${k === currentKey ? 'current-row' : ''}">
         <td>${fmtMonth(k)}${k === currentKey ? ' <span style="font-size:0.7rem;color:var(--gold);font-weight:600">● Now</span>' : ''}</td>
-        <td>${d.count}</td>
-        <td>${curDec(d.total)}</td>
-        <td>${curDec(d.gst)}</td>
-        <td>${curDec(d.total - d.gst)}</td>
+        <td>${d.invoices}</td>
+        <td>${curDec(d.paid)}</td>
+        <td>${curDec(d.paidGst)}</td>
+        <td>${curDec(d.paid - d.paidGst)}</td>
+        <td>${d.outstanding > 0 ? `<span style="color:#c9a84c;font-weight:600">${curDec(d.outstanding)}</span>` : '<span style="color:#1a7a4a">—</span>'}</td>
         <td>${vsHtml}</td>
       </tr>`;
   });
 
   document.getElementById('monthlyTableBody').innerHTML = hasData
     ? rows
-    : '<tr><td colspan="6" class="empty-state">No accepted quotes yet — revenue will appear here once quotes are accepted</td></tr>';
+    : '<tr><td colspan="7" class="empty-state">No invoices yet — data will appear here once invoices are created</td></tr>';
 }
 
 // ── JOB PIPELINE ─────────────────────────────────────────────────
