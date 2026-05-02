@@ -214,6 +214,7 @@ document.getElementById('searchInput').addEventListener('input', renderInvoices)
 document.getElementById('statusFilter').addEventListener('change', renderInvoices);
 renderStats();
 renderInvoices();
+window._pageRefresh = function() { renderStats(); renderInvoices(); };
 </script>
 </body>
 </html>

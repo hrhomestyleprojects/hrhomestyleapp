@@ -209,6 +209,7 @@ function exportCSV() {
 document.getElementById('searchInput').addEventListener('input', renderQuotes);
 document.getElementById('statusFilter').addEventListener('change', renderQuotes);
 renderQuotes();
+window._pageRefresh = renderQuotes;
 </script>
 </body>
 </html>

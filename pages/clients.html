@@ -148,6 +148,7 @@ function deleteClient(id) {
 
 document.getElementById('clientSearch').addEventListener('input', renderClients);
 renderClients();
+window._pageRefresh = renderClients;
 </script>
 </body>
 </html>

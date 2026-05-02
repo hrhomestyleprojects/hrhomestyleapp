@@ -185,6 +185,7 @@ document.getElementById('j_start').value = Utils.isoToday();
 renderJobStats();
 renderJobs();
 checkQuoteConversion();
+window._pageRefresh = function() { renderJobStats(); renderJobs(); };
 </script>
 </body>
 </html>

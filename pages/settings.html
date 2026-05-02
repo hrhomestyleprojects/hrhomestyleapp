@@ -179,17 +179,21 @@ function clearData() {
 }
 
 // Load saved settings
-const s = SettingsStore.get();
-if (s.name)    document.getElementById('s_name').value    = s.name;
-if (s.abn)     document.getElementById('s_abn').value     = s.abn;
-if (s.phone)   document.getElementById('s_phone').value   = s.phone;
-if (s.email)   document.getElementById('s_email').value   = s.email;
-if (s.address) document.getElementById('s_address').value = s.address;
-if (s.accName) document.getElementById('s_accname').value = s.accName;
-if (s.bank)    document.getElementById('s_bank').value    = s.bank;
-if (s.bsb)     document.getElementById('s_bsb').value     = s.bsb;
-if (s.accNum)  document.getElementById('s_accnum').value  = s.accNum;
-if (s.notes)   document.getElementById('s_notes').value   = s.notes;
+function loadSettings() {
+  const s = SettingsStore.get();
+  if (s.name)    document.getElementById('s_name').value    = s.name;
+  if (s.abn)     document.getElementById('s_abn').value     = s.abn;
+  if (s.phone)   document.getElementById('s_phone').value   = s.phone;
+  if (s.email)   document.getElementById('s_email').value   = s.email;
+  if (s.address) document.getElementById('s_address').value = s.address;
+  if (s.accName) document.getElementById('s_accname').value = s.accName;
+  if (s.bank)    document.getElementById('s_bank').value    = s.bank;
+  if (s.bsb)     document.getElementById('s_bsb').value     = s.bsb;
+  if (s.accNum)  document.getElementById('s_accnum').value  = s.accNum;
+  if (s.notes)   document.getElementById('s_notes').value   = s.notes;
+}
+loadSettings();
+window._pageRefresh = loadSettings;
 </script>
 </body>
 </html>
